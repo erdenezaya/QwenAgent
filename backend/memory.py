@@ -96,7 +96,7 @@ def save_incident(incident_data: dict):
             id, raw_alert, host, service, severity, status, 
             triage_reasoning, remediation_plan, requires_approval, 
             approved_by, execution_logs, verification_results, root_cause, resolution_summary, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             incident_data.get("id"),
             incident_data.get("raw_alert", ""),
