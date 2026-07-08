@@ -19,7 +19,6 @@ async function fetchData() {
         await Promise.all([
             fetchIncidents(),
             fetchMemories(),
-            fetchOSSLogs(),
             fetchKPI()
         ]);
         updateHITLPanel();
@@ -92,6 +91,7 @@ async function fetchIncidents() {
     document.getElementById("active-count").innerText = activeCount;
     
     renderIncidents();
+    updateAgentStatusPanel();
 }
 
 // Fetch Memories
@@ -101,12 +101,7 @@ async function fetchMemories() {
     renderMemories();
 }
 
-// Fetch OSS Logs
-async function fetchOSSLogs() {
-    const res = await fetch(`${API_BASE}/api/oss/logs`);
-    ossLogs = await res.json();
-    renderOSSLogs();
-}
+// Webhooks connections status and active integrations lists loaded dynamically
 
 // Fetch KPI Metrics
 async function fetchKPI() {
@@ -389,44 +384,68 @@ function renderMemories() {
     `).join("");
 }
 
-// Render OSS archives list
-function renderOSSLogs() {
-    const container = document.getElementById("oss-log-list");
-    if (ossLogs.length === 0) {
-        container.innerHTML = `<div class="empty-state">No files uploaded. Archive logs to OSS.</div>`;
-        return;
+// Update Agent Status Panel in real-time based on incident phases
+function updateAgentStatusPanel() {
+    let isTriageActive = false;
+    let isRemediationActive = false;
+    let isVerifyActive = false;
+    
+    // Check states of active incidents
+    incidents.forEach(inc => {
+        if (inc.status === "triage") {
+            isTriageActive = true;
+        } else if (["triage_completed", "approved"].includes(inc.status)) {
+            isRemediationActive = true;
+        } else if (inc.status === "executing") {
+            isRemediationActive = true;
+            isVerifyActive = true;
+        } else if (inc.status === "executing_completed") {
+            isVerifyActive = true;
+        }
+    });
+    
+    // 1. Triage Agent status update
+    const triageDot = document.getElementById("agent-status-triage-dot");
+    const triageText = document.getElementById("agent-status-triage-text");
+    if (triageDot && triageText) {
+        if (isTriageActive) {
+            triageDot.className = "status-indicator indicator-amber";
+            triageText.className = "status-text text-glow-amber";
+            triageText.innerText = "Diagnosing";
+        } else {
+            triageDot.className = "status-indicator indicator-grey";
+            triageText.className = "status-text text-glow-grey";
+            triageText.innerText = "Idle";
+        }
     }
     
-    container.innerHTML = ossLogs.map(log => {
-        let key = "";
-        let sizeText = "";
-        let dateText = "";
-        
-        if (typeof log === "string") {
-            key = log;
-            sizeText = "JSON Log File";
-            dateText = "local_oss_archive";
+    // 2. Remediation Agent status update
+    const remediationDot = document.getElementById("agent-status-reremediation-dot") || document.getElementById("agent-status-remediation-dot");
+    const remediationText = document.getElementById("agent-status-remediation-text");
+    if (remediationDot && remediationText) {
+        if (isRemediationActive) {
+            remediationDot.className = "status-indicator indicator-blue";
+            remediationText.className = "status-text text-glow-blue";
+            remediationText.innerText = "Planning";
         } else {
-            key = log.key;
-            sizeText = `${(log.size / 1024).toFixed(2)} KB`;
-            dateText = log.last_modified;
+            remediationDot.className = "status-indicator indicator-grey";
+            remediationText.className = "status-text text-glow-grey";
+            remediationText.innerText = "Idle";
         }
-        
-        return `
-            <div class="oss-item">
-                <svg class="oss-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                    <polyline points="17 8 12 3 7 8"/>
-                    <line x1="12" y1="3" x2="12" y2="15"/>
-                </svg>
-                <div class="oss-info">
-                    <span class="oss-key" title="${key}">${key}</span>
-                    <div class="oss-meta">
-                        <span>${sizeText}</span>
-                        <span>${dateText}</span>
-                    </div>
-                </div>
-            </div>
-        `;
-    }).join("");
+    }
+    
+    // 3. Verification Agent status update
+    const verifyDot = document.getElementById("agent-status-verify-dot");
+    const verifyText = document.getElementById("agent-status-verify-text");
+    if (verifyDot && verifyText) {
+        if (isVerifyActive) {
+            verifyDot.className = "status-indicator indicator-green";
+            verifyText.className = "status-text text-glow-green";
+            verifyText.innerText = "Verifying";
+        } else {
+            verifyDot.className = "status-indicator indicator-grey";
+            verifyText.className = "status-text text-glow-grey";
+            verifyText.innerText = "Idle";
+        }
+    }
 }

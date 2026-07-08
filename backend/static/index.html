@@ -168,18 +168,90 @@
                     </div>
                 </div>
 
-                <!-- Alibaba Cloud Archive Audit Logs -->
-                <div class="card glassmorphic flex-grow">
+                <!-- Agent Registry & Orchestrator Console -->
+                <div class="card glassmorphic flex-grow flex-col">
                     <div class="card-header">
-                        <img src="https://img.alicdn.com/tfs/TB1.7tSvxTpK1RjSZKPXXa3kpXa-34-34.png" alt="Alibaba Cloud Logo" class="header-logo" onerror="this.style.display='none'">
-                        <h2>Alibaba Cloud OSS Storage</h2>
-                        <span class="badge badge-orange">Proof of Deployment</span>
+                        <svg class="header-icon icon-cyan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+                            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+                            <line x1="6" y1="6" x2="6.01" y2="6"/>
+                            <line x1="6" y1="18" x2="6.01" y2="18"/>
+                        </svg>
+                        <h2>Qwen Cognitive Registry</h2>
+                        <span class="badge">Live Agents</span>
                     </div>
-                    <div class="card-body flex-col">
-                        <p class="section-desc">Immutable audit trails archived directly to Alibaba Cloud Object Storage Service (OSS) buckets.</p>
-                        <div id="oss-log-list" class="oss-list-container flex-grow">
-                            <!-- Populated dynamically -->
-                            <div class="empty-state">No files uploaded. Resolve an incident to trigger OSS archive.</div>
+                    <div class="card-body flex-col" style="gap: 0.6rem;">
+                        <p class="section-desc">Active agent registry detailing models and live operational states.</p>
+                        
+                        <div class="agent-status-tile" id="agent-tile-triage">
+                            <div class="agent-tile-info">
+                                <span class="agent-tile-name">Triage & Diagnostic Agent</span>
+                                <span class="agent-tile-model">qwen-plus</span>
+                            </div>
+                            <div class="agent-tile-status">
+                                <span class="status-indicator indicator-grey" id="agent-status-triage-dot"></span>
+                                <span class="status-text text-glow-grey" id="agent-status-triage-text">Idle</span>
+                            </div>
+                        </div>
+
+                        <div class="agent-status-tile" id="agent-tile-remediation">
+                            <div class="agent-tile-info">
+                                <span class="agent-tile-name">Remediation Planner Agent</span>
+                                <span class="agent-tile-model">qwen-max</span>
+                            </div>
+                            <div class="agent-tile-status">
+                                <span class="status-indicator indicator-grey" id="agent-status-remediation-dot"></span>
+                                <span class="status-text text-glow-grey" id="agent-status-remediation-text">Idle</span>
+                            </div>
+                        </div>
+
+                        <div class="agent-status-tile" id="agent-tile-verify">
+                            <div class="agent-tile-info">
+                                <span class="agent-tile-name">Verification & Safety Agent</span>
+                                <span class="agent-tile-model">qwen-plus</span>
+                            </div>
+                            <div class="agent-tile-status">
+                                <span class="status-indicator indicator-grey" id="agent-status-verify-dot"></span>
+                                <span class="status-text text-glow-grey" id="agent-status-verify-text">Idle</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Monitoring Integration Center -->
+                <div class="card glassmorphic">
+                    <div class="card-header">
+                        <svg class="header-icon icon-yellow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                        </svg>
+                        <h2>Monitoring Connections</h2>
+                        <span class="badge active-incidents-count" id="active-webhooks-count">3 Active</span>
+                    </div>
+                    <div class="card-body" style="gap: 0.5rem; display: flex; flex-direction: column;">
+                        <p class="section-desc">FastAPI webhook receivers listening for incoming real alert payloads.</p>
+                        
+                        <div class="integration-tile">
+                            <div class="integration-header">
+                                <span class="integration-name">Prometheus Alertmanager</span>
+                                <span class="badge badge-green">LIVE</span>
+                            </div>
+                            <code class="integration-url">POST /api/webhooks/prometheus</code>
+                        </div>
+
+                        <div class="integration-tile">
+                            <div class="integration-header">
+                                <span class="integration-name">Grafana Alert Webhook</span>
+                                <span class="badge badge-green">LIVE</span>
+                            </div>
+                            <code class="integration-url">POST /api/alerts</code>
+                        </div>
+
+                        <div class="integration-tile">
+                            <div class="integration-header">
+                                <span class="integration-name">Zabbix Custom Actions</span>
+                                <span class="badge badge-green">LIVE</span>
+                            </div>
+                            <code class="integration-url">POST /api/alerts</code>
                         </div>
                     </div>
                 </div>
