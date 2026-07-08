@@ -34,34 +34,70 @@
             <!-- Left Panel: Trigger & Logs -->
             <section class="left-panel flex-col">
                 <!-- Trigger Alert Card -->
+                <!-- Target Servers Inventory -->
                 <div class="card glassmorphic glow-blue">
                     <div class="card-header">
-                        <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                            <line x1="12" y1="9" x2="12" y2="13"/>
-                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                        <svg class="header-icon icon-cyan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="2" width="20" height="20" rx="2" ry="2"/>
+                            <rect x="9" y="9" width="6" height="6"/>
+                            <line x1="9" y1="1" x2="9" y2="23"/>
+                            <line x1="15" y1="1" x2="15" y2="23"/>
+                            <line x1="1" y1="9" x2="23" y2="9"/>
+                            <line x1="1" y1="15" x2="23" y2="15"/>
                         </svg>
-                        <h2>Inject System Alert</h2>
+                        <h2>Target Server Inventory</h2>
+                        <span class="badge badge-green">3 Online</span>
                     </div>
-                    <div class="card-body">
-                        <p class="section-desc">Simulate an IT server incident. Submit your custom description or pick a template.</p>
+                    <div class="card-body flex-col" style="gap: 0.6rem;">
+                        <p class="section-desc">Monitored cluster node health status and target system configurations.</p>
                         
-                        <div class="template-chips">
-                            <button class="chip-btn" onclick="setTemplate('tomcat')">Tomcat High CPU</button>
-                            <button class="chip-btn" onclick="setTemplate('mysql')">MySQL Connection Failure</button>
-                            <button class="chip-btn" onclick="setTemplate('disk')">Disk Full (var/log)</button>
+                        <div class="node-item">
+                            <div class="node-meta">
+                                <span class="node-name">🖥️ web-prod-01</span>
+                                <span class="badge badge-green" style="font-size: 0.5rem; padding: 0.05rem 0.25rem;">ONLINE</span>
+                            </div>
+                            <div class="node-stats">
+                                <span>CPU: 18%</span> • <span>RAM: 42%</span> • <span>Disk: 45%</span>
+                            </div>
                         </div>
-                        
-                        <div class="form-group">
-                            <textarea id="alert-input" placeholder="Type or paste unstructured system logs/alerts... e.g. Alert: Service tomcat-prod-web is reporting memory leak warnings on host web-srv-02 and CPU utilization peaked at 95%"></textarea>
+
+                        <div class="node-item">
+                            <div class="node-meta">
+                                <span class="node-name">🖥️ db-prod-02</span>
+                                <span class="badge badge-green" style="font-size: 0.5rem; padding: 0.05rem 0.25rem;">ONLINE</span>
+                            </div>
+                            <div class="node-stats">
+                                <span>CPU: 12%</span> • <span>RAM: 58%</span> • <span>Disk: 32%</span>
+                            </div>
                         </div>
-                        <button id="submit-alert-btn" class="primary-btn ripple" onclick="triggerAlert()">
-                            <span>Dispatch Alert to Qwen OS</span>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
-                                <line x1="22" y1="2" x2="11" y2="13"/>
-                                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                            </svg>
-                        </button>
+
+                        <div class="node-item">
+                            <div class="node-meta">
+                                <span class="node-name">🖥️ srv-app-09</span>
+                                <span class="badge badge-green" style="font-size: 0.5rem; padding: 0.05rem 0.25rem;">ONLINE</span>
+                            </div>
+                            <div class="node-stats">
+                                <span>CPU: 8%</span> • <span>RAM: 31%</span> • <span>Disk: 99%</span>
+                            </div>
+                        </div>
+
+                        <!-- Test Console (Collapsible for Demo/Evaluation) -->
+                        <details class="demo-details" style="margin-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.5rem;">
+                            <summary style="font-size: 0.65rem; color: var(--text-secondary); cursor: pointer; user-select: none; font-weight: 600;">🧪 Open Alert Ingestion Simulator</summary>
+                            <div style="margin-top: 0.5rem;">
+                                <div class="template-chips" style="margin-bottom: 0.5rem;">
+                                    <button class="chip-btn" onclick="setTemplate('tomcat')">Tomcat CPU</button>
+                                    <button class="chip-btn" onclick="setTemplate('mysql')">MySQL Failure</button>
+                                    <button class="chip-btn" onclick="setTemplate('disk')">Disk Full</button>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0.5rem;">
+                                    <textarea id="alert-input" placeholder="Type custom log trace alert details..." style="height: 50px; font-size: 0.65rem; padding: 0.3rem;"></textarea>
+                                </div>
+                                <button id="submit-alert-btn" class="primary-btn ripple" onclick="triggerAlert()" style="padding: 0.35rem; font-size: 0.65rem; width: 100%;">
+                                    <span>Dispatch Ingested Alert</span>
+                                </button>
+                            </div>
+                        </details>
                     </div>
                 </div>
 

@@ -954,3 +954,44 @@ body {
     border-radius: 3px;
     display: block;
 }
+
+/* Node Inventory Styles */
+.node-item {
+    padding: 0.5rem 0.6rem;
+    background: rgba(30, 41, 59, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.node-item:hover {
+    background: rgba(30, 41, 59, 0.4);
+}
+
+.node-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.node-name {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.node-stats {
+    font-size: 0.55rem;
+    color: var(--text-secondary);
+    margin-top: 0.2rem;
+    font-family: var(--font-mono);
+}
+
+.demo-details summary {
+    font-weight: 600;
+    outline: none;
+}
+
+.demo-details summary:hover {
+    color: var(--text-primary);
+}

@@ -404,6 +404,10 @@ function updateAgentStatusPanel() {
         }
     });
     
+    // Find last ticket that was processed by the agents
+    const lastResolvedTicket = incidents.find(i => ["resolved", "failed"].includes(i.status));
+    const lastTriageTicket = incidents[0]; // most recent ticket in array
+    
     // 1. Triage Agent status update
     const triageDot = document.getElementById("agent-status-triage-dot");
     const triageText = document.getElementById("agent-status-triage-text");
@@ -412,6 +416,10 @@ function updateAgentStatusPanel() {
             triageDot.className = "status-indicator indicator-amber";
             triageText.className = "status-text text-glow-amber";
             triageText.innerText = "Diagnosing";
+        } else if (lastTriageTicket) {
+            triageDot.className = "status-indicator indicator-green";
+            triageText.className = "status-text text-glow-green";
+            triageText.innerText = `Idle (Last: #${lastTriageTicket.id})`;
         } else {
             triageDot.className = "status-indicator indicator-grey";
             triageText.className = "status-text text-glow-grey";
@@ -427,6 +435,10 @@ function updateAgentStatusPanel() {
             remediationDot.className = "status-indicator indicator-blue";
             remediationText.className = "status-text text-glow-blue";
             remediationText.innerText = "Planning";
+        } else if (lastResolvedTicket) {
+            remediationDot.className = "status-indicator indicator-green";
+            remediationText.className = "status-text text-glow-green";
+            remediationText.innerText = `Idle (Last: #${lastResolvedTicket.id})`;
         } else {
             remediationDot.className = "status-indicator indicator-grey";
             remediationText.className = "status-text text-glow-grey";
@@ -442,6 +454,10 @@ function updateAgentStatusPanel() {
             verifyDot.className = "status-indicator indicator-green";
             verifyText.className = "status-text text-glow-green";
             verifyText.innerText = "Verifying";
+        } else if (lastResolvedTicket) {
+            verifyDot.className = "status-indicator indicator-green";
+            verifyText.className = "status-text text-glow-green";
+            verifyText.innerText = `Idle (Last: #${lastResolvedTicket.id})`;
         } else {
             verifyDot.className = "status-indicator indicator-grey";
             verifyText.className = "status-text text-glow-grey";
