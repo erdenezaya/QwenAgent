@@ -213,6 +213,56 @@ def get_oss_logs():
     """Lists logs currently backed up in Alibaba Cloud OSS / local mock archive."""
     return alibaba_cloud_proof.list_archived_logs()
 
+@app.get("/api/kpi")
+def get_kpi_metrics():
+    """Calculates KPI telemetry metrics from the incidents database."""
+    conn = memory.get_db_connection()
+    cursor = conn.cursor()
+    
+    # 1. Total incidents collected
+    cursor.execute("SELECT COUNT(*) as total FROM incidents")
+    total_alerts = cursor.fetchone()["total"]
+    
+    # 2. Resolved alerts count
+    cursor.execute("SELECT COUNT(*) as resolved FROM incidents WHERE status = 'resolved'")
+    resolved_alerts = cursor.fetchone()["resolved"]
+    
+    # 3. Active alerts count
+    cursor.execute("SELECT COUNT(*) as active FROM incidents WHERE status NOT IN ('resolved', 'failed')")
+    active_alerts = cursor.fetchone()["active"]
+    
+    # 4. Pending approvals count
+    cursor.execute("SELECT COUNT(*) as pending FROM incidents WHERE status = 'pending_approval'")
+    pending_approvals = cursor.fetchone()["pending"]
+    
+    # 5. Success rate
+    cursor.execute("SELECT COUNT(*) as failed FROM incidents WHERE status = 'failed'")
+    failed_alerts = cursor.fetchone()["failed"]
+    total_completed = resolved_alerts + failed_alerts
+    success_rate = round((resolved_alerts / total_completed) * 100, 1) if total_completed > 0 else 100.0
+    
+    # 6. Auto-Remediation Rate (Resolved without human approval)
+    cursor.execute("SELECT COUNT(*) as auto_resolved FROM incidents WHERE status = 'resolved' AND requires_approval = 0")
+    auto_resolved = cursor.fetchone()["auto_resolved"]
+    auto_remediation_rate = round((auto_resolved / resolved_alerts) * 100, 1) if resolved_alerts > 0 else 100.0
+    
+    # 7. Avg. Resolution Time (seconds)
+    cursor.execute("SELECT AVG(resolution_time) as avg_time FROM incidents WHERE status = 'resolved' AND resolution_time IS NOT NULL")
+    row = cursor.fetchone()
+    avg_resolution_time = round(row["avg_time"], 1) if row and row["avg_time"] else 0.0
+    
+    conn.close()
+    
+    return {
+        "total_alerts": total_alerts,
+        "resolved_alerts": resolved_alerts,
+        "active_alerts": active_alerts,
+        "pending_approvals": pending_approvals,
+        "success_rate": success_rate,
+        "auto_remediation_rate": auto_remediation_rate,
+        "avg_resolution_time": avg_resolution_time
+    }
+
 # Create static directory path
 STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 if not os.path.exists(STATIC_DIR):

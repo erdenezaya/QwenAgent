@@ -19,7 +19,8 @@ async function fetchData() {
         await Promise.all([
             fetchIncidents(),
             fetchMemories(),
-            fetchOSSLogs()
+            fetchOSSLogs(),
+            fetchKPI()
         ]);
         updateHITLPanel();
     } catch (err) {
@@ -105,6 +106,22 @@ async function fetchOSSLogs() {
     const res = await fetch(`${API_BASE}/api/oss/logs`);
     ossLogs = await res.json();
     renderOSSLogs();
+}
+
+// Fetch KPI Metrics
+async function fetchKPI() {
+    try {
+        const res = await fetch(`${API_BASE}/api/kpi`);
+        if (!res.ok) return;
+        const data = await res.json();
+        
+        document.getElementById("kpi-total").innerText = data.total_alerts;
+        document.getElementById("kpi-success").innerText = data.success_rate + "%";
+        document.getElementById("kpi-auto").innerText = data.auto_remediation_rate + "%";
+        document.getElementById("kpi-time").innerText = data.avg_resolution_time.toFixed(1) + "s";
+    } catch (e) {
+        console.error("Failed to fetch KPIs:", e);
+    }
 }
 
 // Update the Human-in-the-Loop approval console
@@ -227,9 +244,12 @@ function renderIncidents() {
             try {
                 const logsData = JSON.parse(inc.execution_logs);
                 toolCallInfo = `
-                    <div class="meta-pills" style="margin-top: 0.4rem;">
+                    <div class="meta-pills" style="margin-top: 0.4rem; flex-wrap: wrap; gap: 0.3rem;">
                         <span class="pill"><strong>Suggested Action:</strong> ${logsData.planned_tool.name}</span>
                         <span class="pill"><strong>Requires Approval:</strong> ${inc.requires_approval ? "YES" : "NO"}</span>
+                        ${inc.predicted_effort ? `<span class="pill"><strong>Effort:</strong> ${inc.predicted_effort}</span>` : ""}
+                        ${inc.predicted_downtime ? `<span class="pill"><strong>Downtime Risk:</strong> ${inc.predicted_downtime === "Yes" ? "<span style='color: var(--color-orange);'>YES (Downtime Alert)</span>" : "No"}</span>` : ""}
+                        ${inc.risk_level ? `<span class="pill"><strong>Risk Level:</strong> <span style="color: ${inc.risk_level === 'High' ? 'var(--color-red)' : inc.risk_level === 'Medium' ? 'var(--color-orange)' : 'var(--color-green)'}">${inc.risk_level}</span></span>` : ""}
                     </div>
                 `;
             } catch (e) {}
@@ -277,6 +297,11 @@ function renderIncidents() {
         
         // 4. Verification Check
         if (["resolved", "failed"].includes(inc.status)) {
+            let timeInfo = "";
+            if (inc.resolution_time) {
+                timeInfo = `<span class="pill" style="background: rgba(192, 132, 252, 0.1); color: #c084fc; border: 1px solid rgba(192, 132, 252, 0.2); margin-top: 0.4rem; display: inline-block;"><strong>Resolution Speed:</strong> ${inc.resolution_time}s</span>`;
+            }
+            
             stepsHtml += `
                 <div class="agent-step">
                     <div class="step-label label-verify">
@@ -284,6 +309,7 @@ function renderIncidents() {
                     </div>
                     <div class="step-content">
                         <p>${inc.verification_results || "Verifying service status..."}</p>
+                        ${timeInfo}
                         ${inc.resolution_summary ? `
                             <div class="alert-raw-box" style="margin-top: 0.5rem; border-left: 3px solid var(--color-green); background: rgba(16, 185, 129, 0.05);">
                                 <strong style="color: #6ee7b7;">Resolution Summary:</strong><br>
@@ -299,8 +325,16 @@ function renderIncidents() {
             <div class="incident-ticket">
                 <div class="ticket-header">
                     <span class="ticket-title">Ticket ID: <span class="monospace font-bold">#${inc.id}</span></span>
-                    <span class="ticket-status ${getStatusClass(inc.status)}">${inc.status.replace("_", " ")}</span>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        ${inc.pattern_detected && inc.pattern_detected !== "None" && inc.pattern_detected !== "" ? `<span class="badge recurring-badge" style="font-size: 0.6rem;">RECURRING ALERT</span>` : ""}
+                        <span class="ticket-status ${getStatusClass(inc.status)}">${inc.status.replace("_", " ")}</span>
+                    </div>
                 </div>
+                ${inc.pattern_detected && inc.pattern_detected !== "None" && inc.pattern_detected !== "" ? `
+                    <div style="margin: 0.5rem 1.25rem 0 1.25rem; font-size: 0.7rem; color: #fca5a5; background: rgba(239, 68, 68, 0.1); border: 1px dashed rgba(239, 68, 68, 0.3); padding: 0.4rem 0.6rem; border-radius: 4px;">
+                        <strong>Pattern Detection Agent:</strong> ${inc.pattern_detected}
+                    </div>
+                ` : ""}
                 <div class="ticket-body">
                     <div class="alert-raw-box monospace">${inc.raw_alert}</div>
                     ${stepsHtml}

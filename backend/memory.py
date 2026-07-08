@@ -32,20 +32,31 @@ def init_db():
         verification_results TEXT,
         root_cause TEXT,
         resolution_summary TEXT,
+        pattern_detected TEXT,
+        predicted_effort TEXT,
+        predicted_downtime TEXT,
+        risk_level TEXT,
+        resolution_time INTEGER,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
     )
     """)
     
     # Run migrations for new columns if the database file already exists
-    try:
-        cursor.execute("ALTER TABLE incidents ADD COLUMN root_cause TEXT")
-    except sqlite3.OperationalError:
-        pass
-    try:
-        cursor.execute("ALTER TABLE incidents ADD COLUMN resolution_summary TEXT")
-    except sqlite3.OperationalError:
-        pass
+    migrations = [
+        ("root_cause", "TEXT"),
+        ("resolution_summary", "TEXT"),
+        ("pattern_detected", "TEXT"),
+        ("predicted_effort", "TEXT"),
+        ("predicted_downtime", "TEXT"),
+        ("risk_level", "TEXT"),
+        ("resolution_time", "INTEGER")
+    ]
+    for col, col_type in migrations:
+        try:
+            cursor.execute(f"ALTER TABLE incidents ADD COLUMN {col} {col_type}")
+        except sqlite3.OperationalError:
+            pass
     
     # Memory / Experience table
     cursor.execute("""
@@ -95,8 +106,10 @@ def save_incident(incident_data: dict):
         INSERT INTO incidents (
             id, raw_alert, host, service, severity, status, 
             triage_reasoning, remediation_plan, requires_approval, 
-            approved_by, execution_logs, verification_results, root_cause, resolution_summary, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            approved_by, execution_logs, verification_results, root_cause, 
+            resolution_summary, pattern_detected, predicted_effort, 
+            predicted_downtime, risk_level, resolution_time, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             incident_data.get("id"),
             incident_data.get("raw_alert", ""),
@@ -112,6 +125,11 @@ def save_incident(incident_data: dict):
             incident_data.get("verification_results", ""),
             incident_data.get("root_cause", ""),
             incident_data.get("resolution_summary", ""),
+            incident_data.get("pattern_detected", ""),
+            incident_data.get("predicted_effort", ""),
+            incident_data.get("predicted_downtime", ""),
+            incident_data.get("risk_level", ""),
+            incident_data.get("resolution_time"),
             now_str,
             now_str
         ))
@@ -121,7 +139,9 @@ def save_incident(incident_data: dict):
         params = []
         for key in ["host", "service", "severity", "status", "triage_reasoning", 
                     "remediation_plan", "requires_approval", "approved_by", 
-                    "execution_logs", "verification_results", "root_cause", "resolution_summary"]:
+                    "execution_logs", "verification_results", "root_cause", 
+                    "resolution_summary", "pattern_detected", "predicted_effort", 
+                    "predicted_downtime", "risk_level", "resolution_time"]:
             if key in incident_data:
                 val = incident_data[key]
                 if key == "requires_approval":
@@ -206,6 +226,18 @@ def record_experience(service: str, alert_type: str, action_taken: str, success:
         
     conn.commit()
     conn.close()
+
+def count_recent_alerts(service: str, hours: int = 24) -> int:
+    """Counts how many alerts have been logged for a service in the last N hours."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+    SELECT COUNT(*) as cnt FROM incidents 
+    WHERE LOWER(service) = LOWER(?) AND datetime(created_at) >= datetime('now', 'localtime', ?)
+    """, (service, f'-{hours} hours'))
+    row = cursor.fetchone()
+    conn.close()
+    return row["cnt"] if row else 0
 
 # Initialize database on import
 if __name__ not in ("__main__",):

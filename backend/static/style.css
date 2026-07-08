@@ -757,3 +757,69 @@ body {
         max-height: 250px;
     }
 }
+
+/* KPI Dashboard Grid Styles */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.8rem;
+    margin-bottom: 0.8rem;
+}
+
+.kpi-tile {
+    padding: 0.75rem 1rem;
+    display: flex;
+    flex-direction: column;
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.kpi-tile:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.kpi-label {
+    font-size: 0.6rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+}
+
+.kpi-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 0.2rem;
+    font-family: var(--font-mono);
+}
+
+.text-cyan {
+    color: var(--color-cyan);
+    text-shadow: 0 0 10px rgba(34, 211, 238, 0.3);
+}
+
+.text-green {
+    color: var(--color-green);
+    text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+}
+
+.text-yellow {
+    color: #eab308;
+    text-shadow: 0 0 10px rgba(234, 179, 8, 0.3);
+}
+
+.text-purple {
+    color: #c084fc;
+    text-shadow: 0 0 10px rgba(192, 132, 252, 0.3);
+}
+
+/* Warning badges */
+.recurring-badge {
+    background: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}

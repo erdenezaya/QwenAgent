@@ -101,12 +101,17 @@ def run_triage_agent(incident_id: str, raw_alert: str) -> dict:
         elif guessed_service == "disk-storage":
             root_cause = "Log volume capacity exceeded. /var/log accesses logs and journald traces have filled up 99.8% of local disk."
             
+        pattern_detected = "None"
+        if recent_count > 0:
+            pattern_detected = f"Recurring {guessed_service} failure pattern: {recent_count} triggers in past 24h."
+            
         parsed = {
             "service": guessed_service,
             "host": guessed_host,
             "severity": severity,
             "triage_reasoning": reasoning,
-            "root_cause": root_cause
+            "root_cause": root_cause,
+            "pattern_detected": pattern_detected
         }
     else:
         try:
@@ -125,11 +130,27 @@ def run_triage_agent(incident_id: str, raw_alert: str) -> dict:
             parsed = json.loads(content)
         except Exception as e:
             # Graceful fallback on API error
+            pattern_detected = "None"
+            if recent_count > 0:
+                pattern_detected = f"Recurring {guessed_service} failure pattern: {recent_count} triggers in past 24h."
+            
+            root_cause = "Unknown root cause."
+            if guessed_service == "tomcat":
+                root_cause = "JVM Heap Space OOM (OutOfMemoryError) triggered by stuck worker threads in Catalina pool on port 8080."
+            elif guessed_service == "mysql":
+                root_cause = "MySQL daemon crashed because InnoDB table flags are corrupt, causing a PID lock and too many open files."
+            elif guessed_service == "nginx":
+                root_cause = "Nginx critical write error: Upstream timed out because writing temporary proxy files failed due to disk space exhausted (No space left on device)."
+            elif guessed_service == "disk-storage":
+                root_cause = "Log volume capacity exceeded. /var/log accesses logs and journald traces have filled up 99.8% of local disk."
+                
             parsed = {
-                "service": "tomcat",
-                "host": "web-prod-01",
+                "service": guessed_service,
+                "host": guessed_host,
                 "severity": "high",
-                "triage_reasoning": f"Qwen API query failed ({str(e)}). Used default fallback parameters."
+                "triage_reasoning": f"Qwen API query failed ({str(e)}). Used default fallback parameters.",
+                "root_cause": root_cause,
+                "pattern_detected": pattern_detected
             }
 
     # Update incident in database
@@ -180,14 +201,15 @@ def run_remediation_agent(incident_id: str) -> dict:
         "1. restart_service(service_name, host): Use for service downtime, crashes, or high load.\n"
         "2. clear_disk_space(path, host, file_pattern): Use for disk full, logs buildup. Safe paths: '/var/log', '/tmp'.\n"
         "3. scale_kubernetes_deployment(deployment_name, namespace, replicas): Use for high application load/pod crashes.\n\n"
-        "Approval Policy:\n"
-        "- Destructive actions or restarts on 'prod' hosts or critical severities (high/critical) REQUIRE human approval.\n"
-        "- Cleanups or low-severity actions do NOT require human approval (auto-approve).\n\n"
+        "Approval Policy Thresholds:\n"
+        "- If your suggested plan requires system downtime ('predicted_downtime': 'Yes') or carries high operational risk ('risk_level': 'High'), you MUST require human approval.\n\n"
         "Respond ONLY with a valid JSON block containing the fields:\n"
         "{\n"
         '  "tool_name": "name_of_selected_tool",\n'
         '  "tool_arguments": {"arg1": "val1"},\n'
-        '  "requires_approval": true/false,\n'
+        '  "predicted_effort": "Estimated duration/complexity, e.g. \'Low (10 mins)\' or \'High (2 hours)\'",\n'
+        '  "predicted_downtime": "\'Yes\' or \'No\' depending on whether the action interrupts service.",\n'
+        '  "risk_level": "\'Low\', \'Medium\', or \'High\' representing operational risk.",\n'
         '  "remediation_plan": "Step-by-step description of what you plan to do, citing historical memories if applicable."\n'
         "}\n"
         "Do not output markdown code blocks (like ```json), just raw JSON."
@@ -198,36 +220,52 @@ def run_remediation_agent(incident_id: str) -> dict:
     if not client:
         time.sleep(2.0) # Simulate network lag
         # Mock smart reasoning based on service and severity
-        requires_approval = severity in ["high", "critical"] or "prod" in host.lower()
+        predicted_effort = "Low (10 mins)"
+        predicted_downtime = "No"
+        risk_level = "Low"
         
         if service == "tomcat":
             tool_name = "restart_service"
             tool_args = {"service_name": "tomcat", "host": host}
             plan = "Detected Tomcat JVM resource leak or crash. Recalled historical memory showing restart_service has a 100% success rate. Initiating Tomcat service reboot."
+            predicted_effort = "Medium (15 mins)"
+            predicted_downtime = "Yes"
+            risk_level = "Medium"
         elif service == "mysql":
             tool_name = "restart_service"
             tool_args = {"service_name": "mysql", "host": host}
             plan = "Database connection timed out. Persistent memory records show restart_service is the primary recovery pathway. Restarts on database tier require human review to prevent transaction interrupts."
-            requires_approval = True # Always require DB approval
+            predicted_effort = "High (30 mins)"
+            predicted_downtime = "Yes"
+            risk_level = "High"
         elif service == "nginx":
             tool_name = "restart_service"
             tool_args = {"service_name": "nginx", "host": host}
             plan = "Web proxy service Nginx sluggish or down. Initiating restart action."
+            predicted_effort = "Low (5 mins)"
+            predicted_downtime = "Yes"
+            risk_level = "Medium"
         elif service == "disk-storage":
             tool_name = "clear_disk_space"
-            # Parse path if mentioned, else default
             tool_args = {"path": "/var/log", "host": host, "file_pattern": "*.log"}
             plan = "Server volume full. Historical experiences dictate that clearing syslogs or access log archives resolves the storage issue without data loss. Auto-approving disk cleanup."
-            requires_approval = False # Safe disk cleanups are auto-approved
+            predicted_effort = "Low (10 mins)"
+            predicted_downtime = "No"
+            risk_level = "Low"
         else:
             tool_name = "restart_service"
             tool_args = {"service_name": service, "host": host}
             plan = f"Unknown issue for service {service}. Defaulting to service restart policy."
+            predicted_effort = "Medium (15 mins)"
+            predicted_downtime = "Yes"
+            risk_level = "High"
             
         parsed = {
             "tool_name": tool_name,
             "tool_arguments": tool_args,
-            "requires_approval": requires_approval,
+            "predicted_effort": predicted_effort,
+            "predicted_downtime": predicted_downtime,
+            "risk_level": risk_level,
             "remediation_plan": plan
         }
     else:
@@ -248,16 +286,26 @@ def run_remediation_agent(incident_id: str) -> dict:
             parsed = {
                 "tool_name": "restart_service",
                 "tool_arguments": {"service_name": service, "host": host},
-                "requires_approval": True,
+                "predicted_effort": "Medium (15 mins)",
+                "predicted_downtime": "Yes",
+                "risk_level": "High",
                 "remediation_plan": f"API error ({str(e)}). Defaulted to restart tool with human approval required."
             }
+            
+    # Enforce downtime / risk approval threshold policy
+    requires_approval = False
+    if parsed.get("predicted_downtime") == "Yes" or parsed.get("risk_level") == "High" or severity in ["high", "critical"] or "prod" in host.lower():
+        requires_approval = True
             
     # Update incident in db
     update_data = {
         "id": incident_id,
         "remediation_plan": parsed["remediation_plan"],
-        "requires_approval": parsed["requires_approval"],
-        "status": "pending_approval" if parsed["requires_approval"] else "approved"
+        "predicted_effort": parsed.get("predicted_effort", "Low (10 mins)"),
+        "predicted_downtime": parsed.get("predicted_downtime", "No"),
+        "risk_level": parsed.get("risk_level", "Low"),
+        "requires_approval": requires_approval,
+        "status": "pending_approval" if requires_approval else "approved"
     }
     
     # Save selection details inside the plan or log columns for frontend retrieval
@@ -392,6 +440,17 @@ def run_verification_agent(incident_id: str) -> dict:
                 "resolution_summary": "Executed remediation successfully."
             }
             
+    # Calculate resolution time duration
+    elapsed_seconds = 0
+    created_at_str = incident.get("created_at")
+    if created_at_str:
+        try:
+            from datetime import datetime
+            created_at_dt = datetime.strptime(created_at_str, "%Y-%m-%d %H:%M:%S")
+            elapsed_seconds = int((datetime.now() - created_at_dt).total_seconds())
+        except Exception:
+            pass
+            
     # Update incident in db
     new_status = "resolved" if parsed["resolved"] else "failed"
     logs_data = json.loads(incident["execution_logs"])
@@ -400,7 +459,8 @@ def run_verification_agent(incident_id: str) -> dict:
         "id": incident_id,
         "status": new_status,
         "verification_results": parsed["verification_details"],
-        "resolution_summary": parsed.get("resolution_summary", f"Successfully executed tool {tool_meta['name']}")
+        "resolution_summary": parsed.get("resolution_summary", f"Successfully executed tool {tool_meta['name']}"),
+        "resolution_time": elapsed_seconds
     })
     
     # Store this outcome in persistent cognitive memory

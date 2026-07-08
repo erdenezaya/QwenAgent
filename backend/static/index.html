@@ -87,6 +87,26 @@
 
             <!-- Center Panel: Active Incident Stream -->
             <section class="center-panel flex-col">
+                <!-- KPI Dashboard Metrics Grid -->
+                <div class="kpi-grid">
+                    <div class="kpi-tile">
+                        <span class="kpi-label">Ingested Alerts</span>
+                        <span class="kpi-value text-cyan" id="kpi-total">0</span>
+                    </div>
+                    <div class="kpi-tile">
+                        <span class="kpi-label">Success Rate</span>
+                        <span class="kpi-value text-green" id="kpi-success">100%</span>
+                    </div>
+                    <div class="kpi-tile">
+                        <span class="kpi-label">Auto-Remediation</span>
+                        <span class="kpi-value text-yellow" id="kpi-auto">100%</span>
+                    </div>
+                    <div class="kpi-tile">
+                        <span class="kpi-label">Avg. Resolution</span>
+                        <span class="kpi-value text-purple" id="kpi-time">0.0s</span>
+                    </div>
+                </div>
+
                 <div class="card glassmorphic flex-grow flex-col">
                     <div class="card-header">
                         <svg class="header-icon icon-yellow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
