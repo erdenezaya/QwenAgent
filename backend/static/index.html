@@ -225,11 +225,19 @@
                             <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
                         </svg>
                         <h2>Monitoring Connections</h2>
-                        <span class="badge active-incidents-count" id="active-webhooks-count">3 Active</span>
+                        <span class="badge active-incidents-count" id="active-webhooks-count">4 Active</span>
                     </div>
                     <div class="card-body" style="gap: 0.5rem; display: flex; flex-direction: column;">
                         <p class="section-desc">FastAPI webhook receivers listening for incoming real alert payloads.</p>
                         
+                        <div class="integration-tile" style="border-color: rgba(34, 211, 238, 0.2); background: rgba(6, 182, 212, 0.03);">
+                            <div class="integration-header">
+                                <span class="integration-name" style="color: var(--color-cyan);">Alibaba Cloud SLS Webhook</span>
+                                <span class="badge badge-green">LIVE</span>
+                            </div>
+                            <code class="integration-url">POST /api/webhooks/sls</code>
+                        </div>
+
                         <div class="integration-tile">
                             <div class="integration-header">
                                 <span class="integration-name">Prometheus Alertmanager</span>

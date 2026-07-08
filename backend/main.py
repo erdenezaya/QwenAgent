@@ -129,6 +129,33 @@ def prometheus_webhook(payload: dict, background_tasks: BackgroundTasks):
         "incident_ids": incident_ids
     }
 
+@app.post("/api/webhooks/sls")
+def sls_webhook(payload: dict, background_tasks: BackgroundTasks):
+    """
+    Webhook adapter for Alibaba Cloud Simple Log Service (SLS) Alert manager.
+    Parses the alert payload and dispatches the autonomous agent flow.
+    """
+    alert_name = payload.get("alert_name", "SLS Log Exception Alert")
+    project = payload.get("project", "hack-ops-project")
+    logstore = payload.get("logstore", "app-error-logstore")
+    message = payload.get("alert_message", "OutOfMemoryError triggered in cluster")
+    
+    # Extract raw log context if fire_results are present
+    fire_results = payload.get("fire_results", [])
+    log_snippet = ""
+    if fire_results and len(fire_results) > 0:
+        import json
+        log_snippet = "\nLog Traces:\n" + json.dumps(fire_results[0], indent=2)
+        
+    alert_text = f"SLS_ALERT: [{alert_name}] triggered in project '{project}' / Logstore '{logstore}'. Message: {message} {log_snippet}"
+    
+    # Process alert in background
+    def process():
+        agent.process_alert_full_flow(alert_text)
+        
+    background_tasks.add_task(process)
+    return {"message": "SLS Webhook ingested successfully."}
+
 @app.get("/api/incidents")
 def get_incidents():
     """Returns all incident tickets."""
