@@ -33,25 +33,45 @@ def get_qwen_client():
 def run_triage_agent(incident_id: str, raw_alert: str) -> dict:
     """
     Triage Agent (Qwen-Plus):
-    Parses the raw unstructured alert, extracts key entities, categorizes severity, 
-    and determines the host and service affected.
+    Parses the raw unstructured alert, fetches logs from tools, extracts key entities,
+    categorizes severity, and performs a Root Cause Analysis (RCA).
     """
     client = get_qwen_client()
     
+    # Pre-parse service/host using simple heuristic to fetch logs before Qwen call
+    alert_lower = raw_alert.lower()
+    guessed_service = "unknown"
+    if "tomcat" in alert_lower: guessed_service = "tomcat"
+    elif "mysql" in alert_lower or "database" in alert_lower: guessed_service = "mysql"
+    elif "nginx" in alert_lower: guessed_service = "nginx"
+    elif "disk" in alert_lower or "storage" in alert_lower or "space" in alert_lower: guessed_service = "disk-storage"
+    
+    guessed_host = "sys-node-04"
+    if "web" in alert_lower: guessed_host = "web-prod-01"
+    elif "db" in alert_lower or "mysql" in alert_lower: guessed_host = "db-prod-02"
+    elif "srv" in alert_lower: guessed_host = "srv-app-09"
+    
+    # Fetch diagnostic logs
+    log_result = tools.fetch_service_logs(guessed_service, guessed_host)
+    service_logs = log_result.get("log_content", "No logs fetched.")
+    
     system_prompt = (
-        "You are the Triage Agent in an automated IT operations center. "
-        "Your task is to parse unstructured alert messages and output a clean JSON structure.\n"
+        "You are the Triage and Diagnostic Agent in an automated IT operations center. "
+        "Your task is to parse unstructured alert messages, analyze service logs, "
+        "extract key entities, and perform a Root Cause Analysis (RCA).\n\n"
         "Identify:\n"
         "1. Affected Service (e.g. tomcat, mysql, nginx, disk-storage)\n"
         "2. Hostname/Server name (e.g. web-prod-01)\n"
         "3. Severity Level (low, medium, high, critical)\n"
-        "4. Brief Triage Reasoning explanation.\n\n"
+        "4. Brief Triage Reasoning explanation.\n"
+        "5. Root Cause Analysis (RCA): Explain exactly why this failure occurred based on the logs provided.\n\n"
         "Output ONLY a valid JSON object matching this schema:\n"
         "{\n"
         '  "service": "service_name",\n'
         '  "host": "hostname",\n'
         '  "severity": "severity_level",\n'
-        '  "triage_reasoning": "your detailed reasoning explanation"\n'
+        '  "triage_reasoning": "your detailed reasoning explanation",\n'
+        '  "root_cause": "detailed root cause diagnostic summary"\n'
         "}\n"
         "Do not include any markdown block formatting (like ```json) in your final output, just raw JSON."
     )
@@ -59,37 +79,34 @@ def run_triage_agent(incident_id: str, raw_alert: str) -> dict:
     # If API_KEY is missing, run in high-fidelity mock mode
     if not client:
         time.sleep(1.5) # Simulate network lag
-        # Analyze alert content to make the mock look smart
-        alert_lower = raw_alert.lower()
         
-        service = "unknown"
-        if "tomcat" in alert_lower: service = "tomcat"
-        elif "mysql" in alert_lower or "database" in alert_lower: service = "mysql"
-        elif "nginx" in alert_lower: service = "nginx"
-        elif "disk" in alert_lower or "storage" in alert_lower or "space" in alert_lower: service = "disk-storage"
-        
-        host = "unknown-host"
-        if "web" in alert_lower: host = "web-prod-01"
-        elif "db" in alert_lower or "mysql" in alert_lower: host = "db-prod-02"
-        elif "srv" in alert_lower: host = "srv-app-09"
-        else: host = "sys-node-04"
-            
         severity = "medium"
         if any(w in alert_lower for w in ["98%", "full", "unresponsive", "failed", "critical"]):
-            severity = "critical" if "mysql" in service else "high"
+            severity = "critical" if "mysql" in guessed_service else "high"
         elif "warning" in alert_lower:
             severity = "low"
             
         reasoning = (
-            f"Detected service '{service}' reporting issues on host '{host}'. "
+            f"Detected service '{guessed_service}' reporting issues on host '{guessed_host}'. "
             f"Based on raw keywords, categorized severity as '{severity}' and flagged for immediate resolution evaluation."
         )
         
+        root_cause = "Unknown root cause."
+        if guessed_service == "tomcat":
+            root_cause = "JVM Heap Space OOM (OutOfMemoryError) triggered by stuck worker threads in Catalina pool on port 8080."
+        elif guessed_service == "mysql":
+            root_cause = "MySQL daemon crashed because InnoDB table flags are corrupt, causing a PID lock and too many open files."
+        elif guessed_service == "nginx":
+            root_cause = "Nginx critical write error: Upstream timed out because writing temporary proxy files failed due to disk space exhausted (No space left on device)."
+        elif guessed_service == "disk-storage":
+            root_cause = "Log volume capacity exceeded. /var/log accesses logs and journald traces have filled up 99.8% of local disk."
+            
         parsed = {
-            "service": service,
-            "host": host,
+            "service": guessed_service,
+            "host": guessed_host,
             "severity": severity,
-            "triage_reasoning": reasoning
+            "triage_reasoning": reasoning,
+            "root_cause": root_cause
         }
     else:
         try:
@@ -97,7 +114,7 @@ def run_triage_agent(incident_id: str, raw_alert: str) -> dict:
                 model=TRIAGE_MODEL,
                 messages=[
                     {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": f"Alert text: {raw_alert}"}
+                    {"role": "user", "content": f"Alert: {raw_alert}\n\nFetched Logs:\n{service_logs}"}
                 ],
                 temperature=0.1
             )
@@ -322,7 +339,8 @@ def run_verification_agent(incident_id: str) -> dict:
         "Respond ONLY with a valid JSON matching this schema:\n"
         "{\n"
         '  "resolved": true/false,\n'
-        '  "verification_details": "Explain why it is resolved or what is still failing based on metrics."\n'
+        '  "verification_details": "Explain why it is resolved or what is still failing based on metrics.",\n'
+        '  "resolution_summary": "Provide a 1-sentence action summary of how the issue was resolved (e.g. Restarted MySQL on db-prod-02, clearing InnoDB lock flags)."\n'
         "}\n"
         "Do not include markdown tags."
     )
@@ -338,9 +356,20 @@ def run_verification_agent(incident_id: str) -> dict:
             f"and metrics show stable CPU load ({health_result['metrics']['cpu_percent']}%) "
             f"and memory allocation ({health_result['metrics']['memory_mb']}MB). Issue resolved."
         )
+        resolution_summary = "Remediation executed successfully."
+        if service == "tomcat":
+            resolution_summary = f"Restarted Tomcat service on host {host}, clearing JVM heap space leakage."
+        elif service == "mysql":
+            resolution_summary = f"Approved and executed MySQL service reboot on host {host}, recovering active database port 3306."
+        elif service == "nginx":
+            resolution_summary = f"Restarted Nginx proxy on host {host} to establish configuration settings."
+        elif service == "disk-storage":
+            resolution_summary = f"Cleared access log archives under '/var/log' on host {host}, freeing up disk space."
+            
         parsed = {
             "resolved": resolved,
-            "verification_details": details
+            "verification_details": details,
+            "resolution_summary": resolution_summary
         }
     else:
         try:
@@ -359,15 +388,19 @@ def run_verification_agent(incident_id: str) -> dict:
         except Exception as e:
             parsed = {
                 "resolved": health_result["success"],
-                "verification_details": f"Verification parsed via fallback due to API error: {str(e)}"
+                "verification_details": f"Verification parsed via fallback due to API error: {str(e)}",
+                "resolution_summary": "Executed remediation successfully."
             }
             
     # Update incident in db
     new_status = "resolved" if parsed["resolved"] else "failed"
+    logs_data = json.loads(incident["execution_logs"])
+    tool_meta = logs_data["planned_tool"]
     memory.save_incident({
         "id": incident_id,
         "status": new_status,
-        "verification_results": parsed["verification_details"]
+        "verification_results": parsed["verification_details"],
+        "resolution_summary": parsed.get("resolution_summary", f"Successfully executed tool {tool_meta['name']}")
     })
     
     # Store this outcome in persistent cognitive memory

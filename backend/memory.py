@@ -30,10 +30,22 @@ def init_db():
         approved_by TEXT,
         execution_logs TEXT,
         verification_results TEXT,
+        root_cause TEXT,
+        resolution_summary TEXT,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
     )
     """)
+    
+    # Run migrations for new columns if the database file already exists
+    try:
+        cursor.execute("ALTER TABLE incidents ADD COLUMN root_cause TEXT")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        cursor.execute("ALTER TABLE incidents ADD COLUMN resolution_summary TEXT")
+    except sqlite3.OperationalError:
+        pass
     
     # Memory / Experience table
     cursor.execute("""
@@ -83,8 +95,8 @@ def save_incident(incident_data: dict):
         INSERT INTO incidents (
             id, raw_alert, host, service, severity, status, 
             triage_reasoning, remediation_plan, requires_approval, 
-            approved_by, execution_logs, verification_results, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            approved_by, execution_logs, verification_results, root_cause, resolution_summary, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             incident_data.get("id"),
             incident_data.get("raw_alert", ""),
@@ -98,6 +110,8 @@ def save_incident(incident_data: dict):
             incident_data.get("approved_by"),
             incident_data.get("execution_logs", ""),
             incident_data.get("verification_results", ""),
+            incident_data.get("root_cause", ""),
+            incident_data.get("resolution_summary", ""),
             now_str,
             now_str
         ))
@@ -107,7 +121,7 @@ def save_incident(incident_data: dict):
         params = []
         for key in ["host", "service", "severity", "status", "triage_reasoning", 
                     "remediation_plan", "requires_approval", "approved_by", 
-                    "execution_logs", "verification_results"]:
+                    "execution_logs", "verification_results", "root_cause", "resolution_summary"]:
             if key in incident_data:
                 val = incident_data[key]
                 if key == "requires_approval":

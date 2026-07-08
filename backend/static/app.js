@@ -210,6 +210,12 @@ function renderIncidents() {
                                 <span class="pill"><strong>Severity:</strong> <span style="color: ${getSeverityColor(inc.severity)}">${inc.severity.toUpperCase()}</span></span>
                             </div>
                         ` : ""}
+                        ${inc.root_cause ? `
+                            <div class="alert-raw-box" style="margin-top: 0.5rem; border-left: 3px solid var(--color-red); background: rgba(239, 68, 68, 0.05);">
+                                <strong style="color: #fca5a5;">Root Cause Analysis (RCA):</strong><br>
+                                <span style="font-family: var(--font-mono); font-size: 0.7rem; color: #f3f4f6;">${inc.root_cause}</span>
+                            </div>
+                        ` : ""}
                     </div>
                 </div>
             `;
@@ -278,6 +284,12 @@ function renderIncidents() {
                     </div>
                     <div class="step-content">
                         <p>${inc.verification_results || "Verifying service status..."}</p>
+                        ${inc.resolution_summary ? `
+                            <div class="alert-raw-box" style="margin-top: 0.5rem; border-left: 3px solid var(--color-green); background: rgba(16, 185, 129, 0.05);">
+                                <strong style="color: #6ee7b7;">Resolution Summary:</strong><br>
+                                <span style="font-family: var(--font-sans); font-size: 0.75rem; color: #f3f4f6;">${inc.resolution_summary}</span>
+                            </div>
+                        ` : ""}
                     </div>
                 </div>
             `;

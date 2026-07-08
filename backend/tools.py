@@ -128,8 +128,84 @@ def check_service_health(service_name: str, host: str) -> dict:
         "metrics": {"cpu_percent": cpu, "memory_mb": mem}
     }
 
+def fetch_service_logs(service_name: str, host: str) -> dict:
+    """Fetches the last 50 lines of system/application logs from a host for diagnostics."""
+    service_name = service_name.lower().strip()
+    host = host.strip()
+    
+    logs = [
+        f"[{time.strftime('%H:%M:%S')}] Connecting to SSH agent at {host}...",
+        f"[{time.strftime('%H:%M:%S')}] Connection successful. Reading service output logs for '{service_name}'...",
+    ]
+    
+    if service_name == "tomcat":
+        log_content = (
+            "2026-07-08 21:28:10.512 ERROR [http-nio-8080-exec-12] org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun: \n"
+            "  java.lang.OutOfMemoryError: Java heap space\n"
+            "  at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2039)\n"
+            "  at java.util.LinkedQueue.take(LinkedQueue.java:83)\n"
+            "  at org.apache.tomcat.util.threads.TaskQueue.take(TaskQueue.java:100)\n"
+            "  at org.apache.tomcat.util.threads.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1061)\n"
+            "  at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1121)\n"
+            "2026-07-08 21:28:15.820 WARNING [ContainerBackgroundProcessor] org.apache.catalina.valves.StuckThreadDetectionValve.notifyStuckThreadCompleted: \n"
+            "  Thread http-nio-8080-exec-12 has been active for 120 seconds and is suspected of being stuck."
+        )
+    elif service_name == "mysql":
+        log_content = (
+            "2026-07-08T21:29:05.124840Z 0 [System] [MY-010116] [Server] /usr/sbin/mysqld (mysqld 8.0.28) starting as process 4120...\n"
+            "2026-07-08T21:29:10.601920Z 0 [ERROR] [MY-012592] [InnoDB] InnoDB: Table flags are corrupt. Connection limits reached.\n"
+            "2026-07-08T21:29:10.602210Z 0 [ERROR] [MY-010202] [Server] Plugin 'InnoDB' init function returned error.\n"
+            "2026-07-08T21:29:10.602300Z 0 [ERROR] [MY-010119] [Server] Aborting connection (too many open files or lock timeout).\n"
+            "2026-07-08T21:29:11.850940Z 0 [System] [MY-010910] [Server] /usr/sbin/mysqld: Shutdown complete."
+        )
+    elif service_name == "nginx":
+        log_content = (
+            "2026/07/08 21:28:01 [error] 14092#14092: *4912 upstream timed out (110: Connection timed out) while reading response header from upstream, client: 192.168.1.45, server: app.io\n"
+            "2026/07/08 21:28:10 [crit] 14092#14092: *4955 open() \"/var/lib/nginx/tmp/proxy/5/03/0000000035\" failed (28: No space left on device) while reading upstream, client: 192.168.1.104, server: app.io"
+        )
+    elif service_name == "disk-storage":
+        log_content = (
+            "Filesystem      Size  Used Avail Use% Mounted on\n"
+            "/dev/xvda1       40G   39.7G     0.1G 99.8% /\n"
+            "du: cannot access '/var/log/journal/1283081a/': No space left on device\n"
+            "systemd-journald[392]: Failed to write entry (23 items, 684B), ignoring: No space left on device"
+        )
+    else:
+        log_content = f"Log Buffer Empty for service '{service_name}' on {host}. Status: UNRESPONSIVE"
+        
+    logs.append("--- Service Log Output ---")
+    logs.append(log_content)
+    
+    return {
+        "success": True,
+        "message": f"Successfully fetched logs for {service_name} on {host}",
+        "logs": "\n".join(logs),
+        "log_content": log_content
+    }
+
 # Tool registration metadata for Qwen functions/tools calling
 TOOLS_METADATA = [
+    {
+        "type": "function",
+        "function": {
+            "name": "fetch_service_logs",
+            "description": "Fetches the last 50 lines of system/application logs from a host for diagnostics and root cause analysis.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "service_name": {
+                        "type": "string",
+                        "description": "The name of the service, e.g. 'tomcat', 'mysql', 'nginx'."
+                    },
+                    "host": {
+                        "type": "string",
+                        "description": "The target host or server name."
+                    }
+                },
+                "required": ["service_name", "host"]
+            }
+        }
+    },
     {
         "type": "function",
         "function": {
@@ -228,7 +304,9 @@ TOOLS_METADATA = [
 def execute_tool(name: str, arguments: dict) -> dict:
     """Executes a tool by name and arguments, catching exceptions."""
     try:
-        if name == "restart_service":
+        if name == "fetch_service_logs":
+            return fetch_service_logs(arguments["service_name"], arguments["host"])
+        elif name == "restart_service":
             return restart_service(arguments["service_name"], arguments["host"])
         elif name == "clear_disk_space":
             return clear_disk_space(
