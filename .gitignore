@@ -1,0 +1,13 @@
+# Secrets and credentials
+.env
+
+# Local database
+backend/agent_ops.db
+
+# Python caches
+__pycache__/
+backend/__pycache__/
+*.pyc
+
+# Local mock OSS storage archives
+backend/oss_mock_archive/
