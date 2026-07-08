@@ -72,6 +72,63 @@ def receive_alert(payload: AlertInput, background_tasks: BackgroundTasks):
         "message": "Alert received. Multi-Agent orchestration started in background."
     }
 
+@app.post("/api/webhooks/prometheus")
+def prometheus_webhook(payload: dict, background_tasks: BackgroundTasks):
+    """
+    Webhook adapter for Prometheus Alertmanager.
+    Converts Prometheus alert structures into unstructured text for Qwen Triage.
+    """
+    alerts = payload.get("alerts", [])
+    if not alerts:
+        raise HTTPException(status_code=400, detail="No alerts found in Prometheus payload")
+        
+    incident_ids = []
+    for alert in alerts:
+        labels = alert.get("labels", {})
+        annotations = alert.get("annotations", {})
+        
+        alert_name = labels.get("alertname", "SystemAlert")
+        instance = labels.get("instance", "unknown-host")
+        severity = labels.get("severity", "medium")
+        summary = annotations.get("summary", "")
+        description = annotations.get("description", "")
+        
+        # Build alert text string for agent parsing
+        alert_text = (
+            f"PROMETHEUS ALERT Fired: {alert_name} on host {instance}.\n"
+            f"Severity: {severity}\n"
+            f"Summary: {summary}\n"
+            f"Description: {description}"
+        )
+        
+        incident_id = str(uuid.uuid4())[:8]
+        incident_ids.append(incident_id)
+        
+        memory.save_incident({
+            "id": incident_id,
+            "raw_alert": alert_text,
+            "status": "received",
+            "triage_reasoning": "Prometheus alert received. Awaiting triage...",
+            "remediation_plan": "Awaiting triage completion..."
+        })
+        
+        # Define worker block closure
+        def process_flow(inc_id=incident_id, text=alert_text):
+            agent.run_triage_agent(inc_id, text)
+            remed = agent.run_remediation_agent(inc_id)
+            if not remed.get("requires_approval"):
+                agent.execute_remediation(inc_id, approved_by="prometheus-autopilot")
+                agent.run_verification_agent(inc_id)
+                full_incident = memory.get_incident(inc_id)
+                alibaba_cloud_proof.archive_incident_to_oss(full_incident)
+                
+        background_tasks.add_task(process_flow)
+        
+    return {
+        "message": f"Successfully parsed and dispatched {len(alerts)} Prometheus alerts.",
+        "incident_ids": incident_ids
+    }
+
 @app.get("/api/incidents")
 def get_incidents():
     """Returns all incident tickets."""
