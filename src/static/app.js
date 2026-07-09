@@ -171,7 +171,9 @@ function renderFlowchartAndLogs() {
     
     nodes.forEach(id => {
         const el = document.getElementById(`node-${id}`);
-        if (el) el.className = `flow-node node-${id}`;
+        if (el) {
+            el.classList.remove("active", "completed", "failed");
+        }
         
         const detail = document.getElementById(`detail-${id}`);
         if (detail) detail.innerText = "Idle";
@@ -179,7 +181,9 @@ function renderFlowchartAndLogs() {
     
     conns.forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.className = "flow-connector";
+        if (el) {
+            el.classList.remove("active");
+        }
     });
     
     const logsContainer = document.getElementById("terminal-body");
@@ -284,12 +288,18 @@ function renderFlowchartAndLogs() {
 
 function setNodeState(nodeId, state) {
     const el = document.getElementById(`node-${nodeId}`);
-    if (el) el.className = `flow-node node-${nodeId} ${state}`;
+    if (el) {
+        el.classList.remove("active", "completed", "failed");
+        if (state) el.classList.add(state);
+    }
 }
 
 function setConnState(connId, state) {
     const el = document.getElementById(connId);
-    if (el) el.className = `flow-connector ${state}`;
+    if (el) {
+        el.classList.remove("active");
+        if (state === "active") el.classList.add("active");
+    }
 }
 
 // Render memories to Left Sidebar panel
