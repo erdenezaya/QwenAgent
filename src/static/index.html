@@ -13,357 +13,318 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- Top Navigation -->
-        <header class="app-header">
-            <div class="logo-area">
-                <div class="logo-orb"></div>
+        
+        <!-- 1. LEFT SIDEBAR NAVIGATION -->
+        <aside class="nav-sidebar">
+            <div class="sidebar-logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                    <path d="M2 12h20"/>
+                </svg>
+            </div>
+            <nav class="sidebar-menu">
+                <a href="#" class="menu-item active">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        <polyline points="9 22 9 12 15 12 15 22"/>
+                    </svg>
+                </a>
+                <a href="#" class="menu-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="9"/>
+                        <rect x="14" y="3" width="7" height="5"/>
+                        <rect x="14" y="12" width="7" height="9"/>
+                        <rect x="3" y="16" width="7" height="5"/>
+                    </svg>
+                </a>
+                <a href="#" class="menu-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                        <polyline points="10 9 9 9 8 9"/>
+                    </svg>
+                </a>
+                <a href="#" class="menu-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                </a>
+                <a href="#" class="menu-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="20" x2="18" y2="10"/>
+                        <line x1="12" y1="20" x2="12" y2="4"/>
+                        <line x1="6" y1="20" x2="6" y2="14"/>
+                    </svg>
+                </a>
+                <a href="#" class="menu-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </svg>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Dashboard Viewport -->
+        <div class="dashboard-viewport">
+            
+            <!-- Top Header Bar -->
+            <header class="app-header">
                 <div class="logo-text">
-                    <h1>QWEN<span>AUTOPILOT.OPS</span></h1>
-                    <span class="sub-label">Autonomous Incident Remediation & Memory Engine</span>
+                    <h1>Qwen Autopilot Ops</h1>
                 </div>
-            </div>
-            <div class="system-status">
-                <div class="status-indicator online"></div>
-                <span>QWEN-CLOUD COGNITIVE ENDPOINT ACTIVE</span>
-            </div>
-        </header>
-
-        <!-- Main Content Layout -->
-        <main class="dashboard-grid">
-            
-            <!-- Left Panel: Trigger & Logs -->
-            <section class="left-panel flex-col">
-                <!-- Trigger Alert Card -->
-                <!-- Target Servers Inventory -->
-                <div class="card glassmorphic glow-blue">
-                    <div class="card-header">
-                        <svg class="header-icon icon-cyan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="2" y="2" width="20" height="20" rx="2" ry="2"/>
-                            <rect x="9" y="9" width="6" height="6"/>
-                            <line x1="9" y1="1" x2="9" y2="23"/>
-                            <line x1="15" y1="1" x2="15" y2="23"/>
-                            <line x1="1" y1="9" x2="23" y2="9"/>
-                            <line x1="1" y1="15" x2="23" y2="15"/>
-                        </svg>
-                        <h2>Target Server Inventory</h2>
-                        <span class="badge badge-green">3 Online</span>
-                    </div>
-                    <div class="card-body flex-col" style="gap: 0.6rem;">
-                        <p class="section-desc">Monitored cluster node health status and target system configurations.</p>
-                        
-                        <div class="node-item">
-                            <div class="node-meta">
-                                <span class="node-name">🖥️ web-prod-01</span>
-                                <span class="badge badge-green" style="font-size: 0.5rem; padding: 0.05rem 0.25rem;">ONLINE</span>
-                            </div>
-                            <div class="node-stats">
-                                <span>CPU: 18%</span> • <span>RAM: 42%</span> • <span>Disk: 45%</span>
-                            </div>
-                        </div>
-
-                        <div class="node-item">
-                            <div class="node-meta">
-                                <span class="node-name">🖥️ db-prod-02</span>
-                                <span class="badge badge-green" style="font-size: 0.5rem; padding: 0.05rem 0.25rem;">ONLINE</span>
-                            </div>
-                            <div class="node-stats">
-                                <span>CPU: 12%</span> • <span>RAM: 58%</span> • <span>Disk: 32%</span>
-                            </div>
-                        </div>
-
-                        <div class="node-item">
-                            <div class="node-meta">
-                                <span class="node-name">🖥️ srv-app-09</span>
-                                <span class="badge badge-green" style="font-size: 0.5rem; padding: 0.05rem 0.25rem;">ONLINE</span>
-                            </div>
-                            <div class="node-stats">
-                                <span>CPU: 8%</span> • <span>RAM: 31%</span> • <span>Disk: 99%</span>
-                            </div>
-                        </div>
-
-                        <!-- Test Console (Collapsible for Demo/Evaluation) -->
-                        <details class="demo-details" style="margin-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.5rem;">
-                            <summary style="font-size: 0.65rem; color: var(--text-secondary); cursor: pointer; user-select: none; font-weight: 600;">🧪 Open Alert Ingestion Simulator</summary>
-                            <div style="margin-top: 0.5rem;">
-                                <div class="template-chips" style="margin-bottom: 0.5rem;">
-                                    <button class="chip-btn" onclick="setTemplate('tomcat')">Tomcat CPU</button>
-                                    <button class="chip-btn" onclick="setTemplate('mysql')">MySQL Failure</button>
-                                    <button class="chip-btn" onclick="setTemplate('disk')">Disk Full</button>
-                                </div>
-                                <div class="form-group" style="margin-bottom: 0.5rem;">
-                                    <textarea id="alert-input" placeholder="Type custom log trace alert details..." style="height: 50px; font-size: 0.65rem; padding: 0.3rem;"></textarea>
-                                </div>
-                                <button id="submit-alert-btn" class="primary-btn ripple" onclick="triggerAlert()" style="padding: 0.35rem; font-size: 0.65rem; width: 100%;">
-                                    <span>Dispatch Ingested Alert</span>
-                                </button>
-                            </div>
-                        </details>
+                <div class="search-bar">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" placeholder="Search incidents, servers, logs..." />
+                </div>
+                <div class="user-actions">
+                    <button class="header-action-btn">➕</button>
+                    <button class="header-action-btn notification-btn">🔔<span class="badge-dot"></span></button>
+                    <div class="user-profile">
+                        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&h=80" alt="Profile" />
                     </div>
                 </div>
+            </header>
 
-                <!-- Qwen Cognitive Memories -->
-                <div class="card glassmorphic flex-grow">
-                    <div class="card-header">
-                        <svg class="header-icon icon-cyan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-                        </svg>
-                        <h2>Persistent Memory Bank</h2>
-                        <span class="badge">Track 1: MemoryAgent</span>
-                    </div>
-                    <div class="card-body flex-col">
-                        <p class="section-desc">Experiences accumulated by Qwen across runs, recalling successful remedies and avoiding failures.</p>
-                        <div id="memory-list" class="memory-list-container flex-grow">
-                            <!-- Populated dynamically -->
-                            <div class="empty-state">Retrieving memory store...</div>
+            <!-- Grid Content -->
+            <main class="dashboard-grid">
+                
+                <!-- 2. LEFT PANEL: SERVERS & MEMORIES -->
+                <section class="left-panel flex-col">
+                    
+                    <!-- Monitored Servers Inventory -->
+                    <div class="card glassmorphic">
+                        <div class="card-header">
+                            <h2>Monitored Servers Inventory</h2>
+                            <button class="action-menu-btn">•••</button>
                         </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Center Panel: Active Incident Stream -->
-            <section class="center-panel flex-col">
-                <!-- KPI Dashboard Metrics Grid -->
-                <div class="kpi-grid">
-                    <div class="kpi-tile">
-                        <span class="kpi-label">Ingested Alerts</span>
-                        <span class="kpi-value text-cyan" id="kpi-total">0</span>
-                    </div>
-                    <div class="kpi-tile">
-                        <span class="kpi-label">Success Rate</span>
-                        <span class="kpi-value text-green" id="kpi-success">100%</span>
-                    </div>
-                    <div class="kpi-tile">
-                        <span class="kpi-label">Auto-Remediation</span>
-                        <span class="kpi-value text-yellow" id="kpi-auto">100%</span>
-                    </div>
-                    <div class="kpi-tile">
-                        <span class="kpi-label">Avg. Resolution</span>
-                        <span class="kpi-value text-purple" id="kpi-time">0.0s</span>
-                    </div>
-                </div>
-
-                <div class="card glassmorphic flex-grow flex-col">
-                    <div class="card-header">
-                        <svg class="header-icon icon-yellow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"/>
-                            <line x1="12" y1="8" x2="12" y2="12"/>
-                            <line x1="12" y1="16" x2="12.01" y2="16"/>
-                        </svg>
-                        <h2>Active Remediation Stream</h2>
-                        <span class="badge active-incidents-count" id="active-count">0</span>
-                    </div>
-                    <div class="card-body flex-col flex-grow">
-                        <div id="incident-container" class="incident-scroll flex-grow">
-                            <div class="empty-state-large">
-                                <svg class="empty-illustration" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                    <rect x="2" y="2" width="20" height="20" rx="2" ry="2"/>
-                                    <path d="M12 18h.01"/>
-                                    <path d="M8 8h8"/>
-                                    <path d="M8 12h8"/>
-                                </svg>
-                                <h3>No Incidents Triggered</h3>
-                                <p>System is nominal. Use the left panel to inject a system alert and watch Qwen coordinate remediation.</p>
+                        <div class="card-body">
+                            <div class="search-inventory">
+                                <span class="search-icon">🔍</span>
+                                <input type="text" placeholder="Search..." id="inventory-search" />
                             </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Right Panel: Telemetry & OSS -->
-            <section class="right-panel flex-col">
-                <!-- Human-in-the-Loop Dialog Container -->
-                <div class="card glassmorphic glow-orange" id="hitl-card" style="display: none;">
-                    <div class="card-header">
-                        <svg class="header-icon icon-orange" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                            <circle cx="9" cy="7" r="4"/>
-                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                        </svg>
-                        <h2>Human-in-the-Loop Checkpoint</h2>
-                        <span class="pulse-indicator"></span>
-                    </div>
-                    <div class="card-body">
-                        <div class="hitl-alert">
-                            <p><strong>Operator Action Required:</strong> High-risk remediation tool call requested by Qwen-Max.</p>
-                        </div>
-                        <div class="hitl-details">
-                            <div class="detail-row"><span>Incident ID:</span> <span id="hitl-id" class="monospace">--</span></div>
-                            <div class="detail-row"><span>Target Server:</span> <span id="hitl-host" class="monospace">--</span></div>
-                            <div class="detail-row"><span>Proposed Tool:</span> <span id="hitl-tool" class="monospace text-glow-orange">--</span></div>
-                            <div class="plan-preview">
-                                <label>Remediation Plan:</label>
-                                <p id="hitl-plan">--</p>
-                            </div>
-                        </div>
-                        <div class="hitl-actions">
-                            <button class="approve-btn ripple" onclick="approveRemediation()">Approve Execution</button>
-                            <button class="reject-btn ripple" onclick="rejectRemediation()">Reject</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Agent Registry & Orchestrator Console -->
-                <div class="card glassmorphic flex-grow flex-col">
-                    <div class="card-header">
-                        <svg class="header-icon icon-cyan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
-                            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
-                            <line x1="6" y1="6" x2="6.01" y2="6"/>
-                            <line x1="6" y1="18" x2="6.01" y2="18"/>
-                        </svg>
-                        <h2>Qwen Cognitive Registry</h2>
-                        <span class="badge">Live Agents</span>
-                    </div>
-                    <div class="card-body flex-col" style="gap: 0.6rem;">
-                        <p class="section-desc">Active agent registry detailing models and live operational states.</p>
-                        
-                        <!-- Triage Agent OKRs -->
-                        <details class="agent-okr-details">
-                            <summary class="agent-status-tile-summary">
-                                <div class="agent-status-tile" id="agent-tile-triage">
-                                    <div class="agent-tile-info">
-                                        <span class="agent-tile-name">Triage & Diagnostic Agent</span>
-                                        <span class="agent-tile-model">qwen-plus</span>
+                            <div class="servers-list">
+                                <div class="server-item active">
+                                    <div class="server-meta">
+                                        <span class="server-icon">🖥️</span>
+                                        <span class="server-name">Server 1 (web-prod-01)</span>
                                     </div>
-                                    <div class="agent-tile-status">
-                                        <span class="status-indicator indicator-grey" id="agent-status-triage-dot"></span>
-                                        <span class="status-text text-glow-grey" id="agent-status-triage-text">Idle</span>
+                                    <span class="status-badge">Commed</span>
+                                </div>
+                                <div class="server-item">
+                                    <div class="server-meta">
+                                        <span class="server-icon">🖥️</span>
+                                        <span class="server-name">Server 2 (db-prod-02)</span>
+                                    </div>
+                                    <span class="status-badge">Commed</span>
+                                </div>
+                                <div class="server-item">
+                                    <div class="server-meta">
+                                        <span class="server-icon">🖥️</span>
+                                        <span class="server-name">Server 3 (srv-app-09)</span>
+                                    </div>
+                                    <span class="status-badge">Commed</span>
+                                </div>
+                            </div>
+                            <details class="alert-simulator-details">
+                                <summary>🧪 Ingestion Simulator</summary>
+                                <div class="simulator-box">
+                                    <div class="template-chips">
+                                        <button onclick="setTemplate('tomcat')">Tomcat CPU</button>
+                                        <button onclick="setTemplate('mysql')">MySQL Failure</button>
+                                        <button onclick="setTemplate('disk')">Disk Full</button>
+                                    </div>
+                                    <textarea id="alert-input" placeholder="Alert details..."></textarea>
+                                    <button id="submit-alert-btn" class="dispatch-btn" onclick="triggerAlert()">Dispatch Alert to Qwen OS</button>
+                                </div>
+                            </details>
+                        </div>
+                    </div>
+
+                    <!-- Persistent Memory Bank -->
+                    <div class="card glassmorphic flex-grow">
+                        <div class="card-header">
+                            <h2>Persistent Memory Bank</h2>
+                            <button class="action-menu-btn">•••</button>
+                        </div>
+                        <div class="card-body flex-col">
+                            <div id="memory-list" class="memory-list flex-grow">
+                                <div class="empty-state">Loading experiences...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </section>
+
+                <!-- 3. CENTER PANEL: ACTIVE REMEDIATION FLOWCHART -->
+                <section class="center-panel flex-col">
+                    <div class="card glassmorphic flex-grow flex-col">
+                        <div class="card-header">
+                            <div class="header-title-group">
+                                <h2>Active Remediation Stream</h2>
+                                <span class="sub-header-label">Active system incident remediation process.</span>
+                            </div>
+                            <div class="real-time-status">
+                                <span class="pulse-green"></span>
+                                <span>Real-Time Status</span>
+                            </div>
+                        </div>
+                        <div class="card-body flex-grow flex-col justify-center">
+                            
+                            <!-- Flowchart Node DAG layout -->
+                            <div id="remediation-flowchart" class="remediation-flowchart">
+                                
+                                <!-- Node 1: Anomaly Detected -->
+                                <div class="flow-node node-anomaly" id="node-triage">
+                                    <div class="node-border"></div>
+                                    <span class="node-icon">⚠️</span>
+                                    <div class="node-meta">
+                                        <span class="node-title">Anomaly Detected</span>
+                                        <span class="node-detail" id="detail-triage">Pending Ingestion</span>
                                     </div>
                                 </div>
-                            </summary>
-                            <div class="agent-okr-content">
-                                <div class="okr-title">Objective: Maximize alert triage accuracy & speed</div>
-                                <div class="okr-item">
-                                    <span class="okr-kr">KR1: Parse and diagnose alert payloads under 2.0s</span>
-                                    <span class="okr-metric text-green" id="okr-triage-kr1">1.4s (Pass)</span>
+                                
+                                <div class="flow-connector" id="conn-1">
+                                    <div class="connector-line"></div>
                                 </div>
-                                <div class="okr-item">
-                                    <span class="okr-kr">KR2: Maintain 98%+ entity parser accuracy</span>
-                                    <span class="okr-metric text-green" id="okr-triage-kr2">99% (Pass)</span>
-                                </div>
-                                <div class="okr-item">
-                                    <span class="okr-kr">KR3: Detect 100% of recurring duplicate alarms</span>
-                                    <span class="okr-metric text-green" id="okr-triage-kr3">100% (Pass)</span>
-                                </div>
-                            </div>
-                        </details>
-
-                        <!-- Remediation Agent OKRs -->
-                        <details class="agent-okr-details" style="margin-top: 0.5rem;">
-                            <summary class="agent-status-tile-summary">
-                                <div class="agent-status-tile" id="agent-tile-remediation">
-                                    <div class="agent-tile-info">
-                                        <span class="agent-tile-name">Remediation Planner Agent</span>
-                                        <span class="agent-tile-model">qwen-max</span>
-                                    </div>
-                                    <div class="agent-tile-status">
-                                        <span class="status-indicator indicator-grey" id="agent-status-remediation-dot"></span>
-                                        <span class="status-text text-glow-grey" id="agent-status-remediation-text">Idle</span>
+                                
+                                <!-- Node 2: Analyzing -->
+                                <div class="flow-node node-analyzing" id="node-diagnose">
+                                    <div class="node-border"></div>
+                                    <span class="node-icon">🔍</span>
+                                    <div class="node-meta">
+                                        <span class="node-title">Analyzing System</span>
+                                        <span class="node-detail" id="detail-diagnose">Idle</span>
                                     </div>
                                 </div>
-                            </summary>
-                            <div class="agent-okr-content">
-                                <div class="okr-title">Objective: Formulate safe playbook actions with high success rate</div>
-                                <div class="okr-item">
-                                    <span class="okr-kr">KR1: Achieve 90%+ auto-remediation rate</span>
-                                    <span class="okr-metric text-yellow" id="okr-remed-kr1">100% (Pass)</span>
+                                
+                                <div class="flow-connector" id="conn-2">
+                                    <div class="connector-line"></div>
                                 </div>
-                                <div class="okr-item">
-                                    <span class="okr-kr">KR2: Enforce 100% downtime manual approval policy</span>
-                                    <span class="okr-metric text-green" id="okr-remed-kr2">100% (Pass)</span>
-                                </div>
-                                <div class="okr-item">
-                                    <span class="okr-kr">KR3: Select optimal SSH command / tool script</span>
-                                    <span class="okr-metric text-green" id="okr-remed-kr3">97% (Pass)</span>
-                                </div>
-                            </div>
-                        </details>
-
-                        <!-- Verification Agent OKRs -->
-                        <details class="agent-okr-details" style="margin-top: 0.5rem;">
-                            <summary class="agent-status-tile-summary">
-                                <div class="agent-status-tile" id="agent-tile-verify">
-                                    <div class="agent-tile-info">
-                                        <span class="agent-tile-name">Verification & Safety Agent</span>
-                                        <span class="agent-tile-model">qwen-plus</span>
-                                    </div>
-                                    <div class="agent-tile-status">
-                                        <span class="status-indicator indicator-grey" id="agent-status-verify-dot"></span>
-                                        <span class="status-text text-glow-grey" id="agent-status-verify-text">Idle</span>
+                                
+                                <!-- Node 3: Generating Plan -->
+                                <div class="flow-node node-planning" id="node-plan">
+                                    <div class="node-border"></div>
+                                    <span class="node-icon">📋</span>
+                                    <div class="node-meta">
+                                        <span class="node-title">Generating Plan</span>
+                                        <span class="node-detail" id="detail-plan">Idle</span>
                                     </div>
                                 </div>
-                            </summary>
-                            <div class="agent-okr-content">
-                                <div class="okr-title">Objective: Verify service recovery & publish audit reports</div>
-                                <div class="okr-item">
-                                    <span class="okr-kr">KR1: Run health port diagnostics under 5.0s</span>
-                                    <span class="okr-metric text-green" id="okr-verify-kr1">1.8s (Pass)</span>
+                                
+                                <div class="flow-connector" id="conn-3">
+                                    <div class="connector-line"></div>
                                 </div>
-                                <div class="okr-item">
-                                    <span class="okr-kr">KR2: Keep MTTR (Mean Time to Recover) under 15.0s</span>
-                                    <span class="okr-metric text-purple" id="okr-verify-kr2">0.0s (Pass)</span>
+                                
+                                <!-- Node 4: Remediation Initiated -->
+                                <div class="flow-node node-executing" id="node-execute">
+                                    <div class="node-border"></div>
+                                    <span class="node-icon">⚡</span>
+                                    <div class="node-meta">
+                                        <span class="node-title">Remediation Initiated</span>
+                                        <span class="node-detail" id="detail-execute">Idle</span>
+                                    </div>
                                 </div>
-                                <div class="okr-item">
-                                    <span class="okr-kr">KR3: Archive post-mortems successfully to OSS</span>
-                                    <span class="okr-metric text-green" id="okr-verify-kr3">100% (Pass)</span>
+                                
+                                <div class="flow-connector" id="conn-4">
+                                    <div class="connector-line"></div>
+                                </div>
+                                
+                                <!-- Node 5: Verification -->
+                                <div class="flow-node node-verifying" id="node-verify">
+                                    <div class="node-border"></div>
+                                    <span class="node-icon">🟢</span>
+                                    <div class="node-meta">
+                                        <span class="node-title">Verifying Recovery</span>
+                                        <span class="node-detail" id="detail-verify">Idle</span>
+                                    </div>
+                                </div>
+
+                            </div>
+                            
+                            <!-- Logs terminal viewport -->
+                            <div class="terminal-logs">
+                                <div class="terminal-header">
+                                    <span>CONSOLE OUTPUT</span>
+                                    <span class="terminal-dot"></span>
+                                </div>
+                                <div class="terminal-body" id="terminal-body">
+                                    <span class="terminal-placeholder">System waiting for incoming SLS webhook alert signals...</span>
                                 </div>
                             </div>
-                        </details>
-                    </div>
-                </div>
 
-                <!-- Monitoring Integration Center -->
-                <div class="card glassmorphic">
-                    <div class="card-header">
-                        <svg class="header-icon icon-yellow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-                        </svg>
-                        <h2>Monitoring Connections</h2>
-                        <span class="badge active-incidents-count" id="active-webhooks-count">4 Active</span>
-                    </div>
-                    <div class="card-body" style="gap: 0.5rem; display: flex; flex-direction: column;">
-                        <p class="section-desc">FastAPI webhook receivers listening for incoming real alert payloads.</p>
-                        
-                        <div class="integration-tile" style="border-color: rgba(34, 211, 238, 0.2); background: rgba(6, 182, 212, 0.03);">
-                            <div class="integration-header">
-                                <span class="integration-name" style="color: var(--color-cyan);">Alibaba Cloud SLS Webhook</span>
-                                <span class="badge badge-green">LIVE</span>
-                            </div>
-                            <code class="integration-url">POST /api/webhooks/sls</code>
-                        </div>
-
-                        <div class="integration-tile">
-                            <div class="integration-header">
-                                <span class="integration-name">Prometheus Alertmanager</span>
-                                <span class="badge badge-green">LIVE</span>
-                            </div>
-                            <code class="integration-url">POST /api/webhooks/prometheus</code>
-                        </div>
-
-                        <div class="integration-tile">
-                            <div class="integration-header">
-                                <span class="integration-name">Grafana Alert Webhook</span>
-                                <span class="badge badge-green">LIVE</span>
-                            </div>
-                            <code class="integration-url">POST /api/alerts</code>
-                        </div>
-
-                        <div class="integration-tile">
-                            <div class="integration-header">
-                                <span class="integration-name">Zabbix Custom Actions</span>
-                                <span class="badge badge-green">LIVE</span>
-                            </div>
-                            <code class="integration-url">POST /api/alerts</code>
                         </div>
                     </div>
-                </div>
-            </section>
-            
-        </main>
+                </section>
+
+                <!-- 4. RIGHT PANEL: HUMAN-IN-THE-LOOP CHECKPOINT -->
+                <section class="right-panel flex-col">
+                    
+                    <div class="card glassmorphic hitl-card glow-orange" id="hitl-card" style="display: none;">
+                        <div class="card-header">
+                            <h2>Human-in-the-Loop Checkpoint</h2>
+                            <button class="action-menu-btn">•••</button>
+                        </div>
+                        <div class="card-body flex-col align-center text-center">
+                            <div class="hitl-avatar-glow">
+                                <div class="hitl-avatar-icon">👤</div>
+                            </div>
+                            <h3 class="hitl-title">Human-in-the-Loop</h3>
+                            <p class="hitl-desc">High-risk command requires review and operator execution authorization.</p>
+                            
+                            <div class="hitl-details-box">
+                                <div class="hitl-row"><span>Node:</span> <span id="hitl-host" class="monospace">--</span></div>
+                                <div class="hitl-row"><span>Command:</span> <code id="hitl-tool" class="monospace">--</code></div>
+                                <p class="hitl-plan-preview" id="hitl-plan">--</p>
+                            </div>
+                            
+                            <div class="hitl-actions">
+                                <button class="approve-btn" onclick="approveRemediation()">Approve Execution</button>
+                                <button class="reject-btn" onclick="rejectRemediation()">Reject Action</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Metrics / OKR stats -->
+                    <div class="card glassmorphic">
+                        <div class="card-header">
+                            <h2>Autopilot Metrics</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="metrics-grid">
+                                <div class="metric-box">
+                                    <span class="m-label">Success Rate</span>
+                                    <span class="m-val text-green" id="kpi-success">100%</span>
+                                </div>
+                                <div class="metric-box">
+                                    <span class="m-label">Auto Rate</span>
+                                    <span class="m-val text-cyan" id="kpi-auto">100%</span>
+                                </div>
+                                <div class="metric-box">
+                                    <span class="m-label">Avg Speed</span>
+                                    <span class="m-val text-purple" id="kpi-time">0.0s</span>
+                                </div>
+                                <div class="metric-box">
+                                    <span class="m-label">Total Logs</span>
+                                    <span class="m-val text-yellow" id="kpi-total">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </section>
+
+            </main>
+        </div>
+        
     </div>
-    
+
     <!-- Script -->
     <script src="app.js"></script>
 </body>
