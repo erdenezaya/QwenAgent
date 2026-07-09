@@ -141,14 +141,26 @@ def handler(environ: Dict[str, Any], start_response):
         def event_generator():
             last_ts = 0
             while True:
+                try:
+                    # Yield comment heartbeat to check client socket
+                    yield ": heartbeat\n\n".encode("utf-8")
+                except Exception:
+                    break
+                    
                 new_events = get_events_since(session_id, last_ts)
                 for evt in new_events:
-                    yield f"event: agent\ndata: {json.dumps(evt)}\n\n".encode("utf-8")
+                    try:
+                        yield f"event: agent\ndata: {json.dumps(evt)}\n\n".encode("utf-8")
+                    except Exception:
+                        return
                     last_ts = evt["timestamp"]
                 
                 # Check if session reached terminal state
                 if is_terminal_state(session_id):
-                    yield f"event: agent\ndata: {json.dumps({'event': 'stream_end', 'session_id': session_id})}\n\n".encode("utf-8")
+                    try:
+                        yield f"event: agent\ndata: {json.dumps({'event': 'stream_end', 'session_id': session_id})}\n\n".encode("utf-8")
+                    except Exception:
+                        pass
                     break
                     
                 time.sleep(0.5)  # 500ms polling interval

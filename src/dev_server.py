@@ -126,13 +126,26 @@ def get_incident_stream(incident_id: str):
     def event_generator():
         last_ts = 0
         while True:
+            try:
+                # Yield a comment heartbeat to detect browser disconnects
+                yield ": heartbeat\n\n"
+            except Exception:
+                # Client disconnected, terminate stream immediately
+                break
+                
             new_events = get_events_since(incident_id, last_ts)
             for evt in new_events:
-                yield f"event: agent\ndata: {json.dumps(evt)}\n\n"
+                try:
+                    yield f"event: agent\ndata: {json.dumps(evt)}\n\n"
+                except Exception:
+                    return
                 last_ts = evt["timestamp"]
                 
             if is_terminal_state(incident_id):
-                yield f"event: agent\ndata: {json.dumps({'event': 'stream_end', 'session_id': incident_id})}\n\n"
+                try:
+                    yield f"event: agent\ndata: {json.dumps({'event': 'stream_end', 'session_id': incident_id})}\n\n"
+                except Exception:
+                    pass
                 break
                 
             time.sleep(0.5)
@@ -165,4 +178,4 @@ if os.path.exists(static_path):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("src.dev_server:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("src.dev_server:app", host="0.0.0.0", port=8000, reload=False)
