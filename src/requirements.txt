@@ -1,0 +1,5 @@
+openai
+tablestore
+aliyun-log-python-sdk
+oss2
+pyyaml

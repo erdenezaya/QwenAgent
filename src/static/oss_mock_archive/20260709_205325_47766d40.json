@@ -1,0 +1,28 @@
+{
+  "alert": {
+    "id": "47766d40",
+    "alert_text": "PROMETHEUS ALERT Fired: Disk utilization exceeded threshold on disk-storage at host srv-app-09"
+  },
+  "logs": "Filesystem      Size  Used Avail Use% Mounted on\n/dev/vda1        40G   39.9G     0 100% /\ntmpfs           1.9G     0  1.9G   0% /dev/shm\n[CRITICAL] /var/log/syslog has grown to 18.5GB due to un-rotated system debug dumps.",
+  "diagnosis": {
+    "service": "disk-storage",
+    "host": "srv-app-09",
+    "severity": "medium",
+    "triage_reasoning": "Mock diagnosis completed locally.",
+    "root_cause": "Log capacity threshold exceeded."
+  },
+  "plan": {
+    "command": "find /var/log -name '*.log' -mtime +7 -delete",
+    "id": "remediation-mock-id"
+  },
+  "exec_result": {
+    "success": true,
+    "stdout": "Command 'find /var/log -name '*.log' -mtime +7 -delete' executed successfully.\nDeleted 43 stale log archives. Reclaimed 4.8 GB of disk storage space.",
+    "stderr": "",
+    "status": "COMPLETED"
+  },
+  "risk_level": 0.5,
+  "history": [],
+  "id": "47766d40",
+  "verified": true
+}
