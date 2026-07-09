@@ -92,15 +92,51 @@ def get_incident(incident_id: str):
         raise HTTPException(status_code=404, detail="Incident not found")
     return inc
 
+class ApprovalPayload(BaseModel):
+    approver: Optional[str] = "Operator-HQ"
+
 @app.post("/api/incidents/{incident_id}/approve")
-def approve_incident(incident_id: str, payload: ApprovalInput, background_tasks: BackgroundTasks):
-    """Receives operator checkpoint approval/rejection and resumes execution."""
+def approve_incident(incident_id: str, payload: ApprovalPayload, background_tasks: BackgroundTasks):
+    """Receives operator checkpoint approval and resumes execution."""
     def resume_flow():
         import asyncio
-        asyncio.run(orchestrator.resume_execution_after_approval(incident_id, payload.approver, payload.approved))
+        asyncio.run(orchestrator.resume_execution_after_approval(incident_id, payload.approver, True))
         
     background_tasks.add_task(resume_flow)
     return {"status": "resumed"}
+
+@app.post("/api/incidents/{incident_id}/reject")
+def reject_incident(incident_id: str, background_tasks: BackgroundTasks):
+    """Receives operator checkpoint rejection and escalates."""
+    def resume_flow():
+        import asyncio
+        asyncio.run(orchestrator.resume_execution_after_approval(incident_id, "Operator-HQ", False))
+        
+    background_tasks.add_task(resume_flow)
+    return {"status": "resumed"}
+
+@app.get("/api/incidents/{incident_id}/stream")
+def get_incident_stream(incident_id: str):
+    """EventSource streaming endpoint for real-time state machine animations."""
+    from fastapi.responses import StreamingResponse
+    import time
+    from src.fc_handler import get_events_since, is_terminal_state
+    
+    def event_generator():
+        last_ts = 0
+        while True:
+            new_events = get_events_since(incident_id, last_ts)
+            for evt in new_events:
+                yield f"event: agent\ndata: {json.dumps(evt)}\n\n"
+                last_ts = evt["timestamp"]
+                
+            if is_terminal_state(incident_id):
+                yield f"event: agent\ndata: {json.dumps({'event': 'stream_end', 'session_id': incident_id})}\n\n"
+                break
+                
+            time.sleep(0.5)
+            
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 @app.get("/api/memories")
 def get_memories():

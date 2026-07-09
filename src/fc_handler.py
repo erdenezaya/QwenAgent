@@ -5,13 +5,102 @@ Local development uses dev_server.py (FastAPI) for cockpit dashboard UI debuggin
 """
 import os
 import json
+import time
 import asyncio
 import logging
 from typing import Dict, Any
 
 from src.orchestrator import execute_full_remediation_flow
+from src.memory import ots_client, get_sqlite_conn
 
 logger = logging.getLogger("autopilot-ops")
+
+def get_events_since(session_id: str, after_timestamp: int, limit: int = 50) -> list[dict]:
+    """
+    Range query on Tablestore OTS or local SQLite incident_events table.
+    Returns events with timestamp > after_timestamp, ordered ascending.
+    """
+    # 1. OTS Query
+    if ots_client:
+        try:
+            from tablestore import INF_MAX, Direction
+            inclusive_start = [("session_id", session_id), ("timestamp", after_timestamp + 1)]
+            exclusive_end   = [("session_id", session_id), ("timestamp", INF_MAX)]
+            
+            table_name = os.environ.get("OTS_TABLE", "incident_sessions")
+            
+            consumed, next_pk, rows, next_token = ots_client.get_range(
+                table_name,
+                Direction.FORWARD,
+                inclusive_start,
+                exclusive_end,
+                limit=limit,
+                columns_to_get=["event_type", "payload", "timestamp"]
+            )
+            
+            events = []
+            for row in rows:
+                attrs = {col[0]: col[1] for col in row.attribute_columns}
+                events.append({
+                    "event": attrs.get("event_type", "unknown"),
+                    "session_id": session_id,
+                    "timestamp": row.primary_key[1][1],
+                    "payload": json.loads(attrs.get("payload", "{}"))
+                })
+            return events
+        except Exception as e:
+            logger.error(f"[OTS Event Range Error] {e}")
+
+    # 2. SQLite local query fallback
+    try:
+        conn = get_sqlite_conn()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT event_type, payload, timestamp FROM incident_events 
+            WHERE session_id = ? AND timestamp > ? 
+            ORDER BY timestamp ASC LIMIT ?
+        """, (session_id, after_timestamp, limit))
+        rows = cursor.fetchall()
+        conn.close()
+        
+        events = []
+        for row in rows:
+            events.append({
+                "event": row["event_type"],
+                "session_id": session_id,
+                "timestamp": row["timestamp"],
+                "payload": json.loads(row["payload"])
+            })
+        return events
+    except Exception as e:
+        logger.error(f"[SQLite Event Range Error] {e}")
+        return []
+
+def is_terminal_state(session_id: str) -> bool:
+    """Checks if the incident session has reached a terminal state."""
+    # 1. OTS Query
+    if ots_client:
+        try:
+            from src import memory
+            ticket = memory.get_incident(session_id)
+            if ticket and ticket.get("status") in ("resolved", "failed"):
+                return True
+        except Exception:
+            pass
+            
+    # 2. SQLite Query
+    try:
+        conn = get_sqlite_conn()
+        cursor = conn.cursor()
+        cursor.execute("SELECT status FROM incidents WHERE id = ?", (session_id,))
+        row = cursor.fetchone()
+        conn.close()
+        if row and row["status"] in ("resolved", "failed"):
+            return True
+    except Exception:
+        pass
+        
+    return False
 
 def handler(environ: Dict[str, Any], start_response):
     """
@@ -33,6 +122,38 @@ def handler(environ: Dict[str, Any], start_response):
         }).encode("utf-8")
         start_response("200 OK", [("Content-Type", "application/json")])
         return [body]
+
+    # --- SSE Stream Endpoint ---
+    if method == "GET" and path.startswith("/incidents/") and path.endswith("/stream"):
+        session_id = path.split("/")[2]
+        
+        # Set SSE headers required by FC3
+        headers = [
+            ("Content-Type", "text/event-stream"),
+            ("Cache-Control", "no-cache"),
+            ("Connection", "keep-alive"),
+            ("X-Accel-Buffering", "no"),  # Critical: disables FC3 response buffering
+            ("Access-Control-Allow-Origin", "*"),  # Enable CORS for cockpit local dev UI
+        ]
+        start_response("200 OK", headers)
+        
+        # Generator yields SSE frames as orchestrator progresses
+        def event_generator():
+            last_ts = 0
+            while True:
+                new_events = get_events_since(session_id, last_ts)
+                for evt in new_events:
+                    yield f"event: agent\ndata: {json.dumps(evt)}\n\n".encode("utf-8")
+                    last_ts = evt["timestamp"]
+                
+                # Check if session reached terminal state
+                if is_terminal_state(session_id):
+                    yield f"event: agent\ndata: {json.dumps({'event': 'stream_end', 'session_id': session_id})}\n\n".encode("utf-8")
+                    break
+                    
+                time.sleep(0.5)  # 500ms polling interval
+                
+        return event_generator()
 
     # --- Incident Ingestion Endpoint ---
     if method == "POST" and path == "/incidents":

@@ -14,6 +14,7 @@ from src.tools.remediation import execute_remediation
 from src.tools.health_check import verify_system_health
 from src.tools.postmortem import upload_postmortem
 from src.safety.risk_scorer import score_blast_radius
+from src.events import emit_event
 
 logger = logging.getLogger("autopilot-ops-orchestrator")
 
@@ -44,7 +45,7 @@ def append_db_log(incident_id: str, message: str):
 
 async def execute_full_remediation_flow(incident_id: str, alert_text: str):
     """
-    Main state machine orchestrator loop. Used locally by FastAPI / dev_server
+    Main state machine orchestrator loop. Used locally by dev_server
     and in production serverless runtimes.
     """
     alert = {"id": incident_id, "alert_text": alert_text}
@@ -69,6 +70,7 @@ async def execute_full_remediation_flow(incident_id: str, alert_text: str):
     })
     
     start_time = time.time()
+    start_ts = int(start_time * 1000)
     
     while state not in (IncidentState.REPORT, IncidentState.ESCALATED):
         span = observability.start_span(incident_id, state.value)
@@ -77,13 +79,34 @@ async def execute_full_remediation_flow(incident_id: str, alert_text: str):
         
         try:
             if state == IncidentState.TRIAGE:
+                # Emit state transition
+                emit_event(incident_id, "state_transition", {
+                    "to_state": "triage",
+                    "from_state": None,
+                    "metadata": {"severity": alert.get("severity", "critical")}
+                })
+                
                 logs = await parse_alert_logs(alert)
                 session["logs"] = logs
                 append_db_log(incident_id, f"Triage diagnostic SLS logs fetched successfully.")
+                
+                emit_event(incident_id, "tool_output", {
+                    "tool": "sls",
+                    "output": f"Retrieved {len(logs)} log entries from SLS",
+                    "latency_ms": int((time.time() - start_time) * 1000)
+                })
+                
                 state = IncidentState.DIAGNOSE
                 observability.end_span(span, "SUCCESS")
                 
             elif state == IncidentState.DIAGNOSE:
+                # Emit state transition
+                emit_event(incident_id, "state_transition", {
+                    "to_state": "diagnose",
+                    "from_state": "triage",
+                    "metadata": {"summary": "SLS log ingestion complete"}
+                })
+                
                 diagnosis = await QwenRouter.diagnose(session)
                 session["diagnosis"] = diagnosis
                 
@@ -109,6 +132,13 @@ async def execute_full_remediation_flow(incident_id: str, alert_text: str):
                 observability.end_span(span, "SUCCESS")
                 
             elif state == IncidentState.PLAN:
+                # Emit state transition
+                emit_event(incident_id, "state_transition", {
+                    "to_state": "plan",
+                    "from_state": "diagnose",
+                    "metadata": {"summary": diagnosis.get("root_cause", "Unknown")}
+                })
+                
                 plan = await QwenRouter.plan_remediation(session)
                 session["plan"] = plan
                 
@@ -131,12 +161,32 @@ async def execute_full_remediation_flow(incident_id: str, alert_text: str):
                 
                 append_db_log(incident_id, f"Remediation plan generated: '{plan.get('command')}' (Risk level: {risk})")
                 
+                # Emit safety check event
+                emit_event(incident_id, "safety_check", {
+                    "tool": "safety",
+                    "message": f"Risk score: {risk:.2f} | Command: {plan.get('command')}",
+                    "risk_score": risk,
+                    "approved": risk < 0.7
+                })
+                
                 if requires_approval:
                     memory.save_incident({
                         "id": incident_id,
                         "status": IncidentState.AWAITING_APPROVAL.value
                     })
                     append_db_log(incident_id, "HITL Gate Block: Remediation plan requires manual Operator Approval.")
+                    
+                    emit_event(incident_id, "state_transition", {
+                        "to_state": "awaiting_approval",
+                        "from_state": "plan",
+                        "metadata": {
+                            "risk_score": risk,
+                            "command": plan.get("command"),
+                            "target_host": diagnosis.get("host"),
+                            "summary": f"HIGH RISK ({risk:.2f}) - awaiting human approval"
+                        }
+                    })
+                    
                     state = IncidentState.AWAITING_APPROVAL
                     observability.end_span(span, "AWAITING_APPROVAL")
                     break
@@ -148,12 +198,24 @@ async def execute_full_remediation_flow(incident_id: str, alert_text: str):
                 break
                 
             elif state == IncidentState.EXECUTE:
+                emit_event(incident_id, "state_transition", {
+                    "to_state": "executing",
+                    "from_state": "plan",
+                    "metadata": {"command": plan.get("command")}
+                })
+                
                 memory.save_incident({
                     "id": incident_id,
                     "status": IncidentState.EXECUTE.value
                 })
                 result = await execute_remediation(plan)
                 session["exec_result"] = result
+                
+                emit_event(incident_id, "tool_output", {
+                    "tool": "executor",
+                    "output": result.get("stdout") if result.get("success") else result.get("stderr"),
+                    "latency_ms": 1000
+                })
                 
                 if result.get("success"):
                     append_db_log(incident_id, f"Remediation execution succeeded:\n{result.get('stdout')}")
@@ -165,6 +227,12 @@ async def execute_full_remediation_flow(incident_id: str, alert_text: str):
                 observability.end_span(span, "SUCCESS" if result.get("success") else "FAILED", result.get("stderr", ""))
                 
             elif state == IncidentState.VERIFY:
+                emit_event(incident_id, "state_transition", {
+                    "to_state": "verify",
+                    "from_state": "executing",
+                    "metadata": {}
+                })
+                
                 healthy = await verify_system_health(alert)
                 session["verified"] = healthy
                 
@@ -192,6 +260,18 @@ async def execute_full_remediation_flow(incident_id: str, alert_text: str):
             "resolution_time": elapsed
         })
         append_db_log(incident_id, f"Incident resolved successfully in {elapsed}s.")
+        
+        emit_event(incident_id, "state_transition", {
+            "to_state": "resolved",
+            "from_state": "verify",
+            "metadata": {"summary": f"Resolved in {elapsed}s"}
+        })
+        
+        emit_event(incident_id, "stream_end", {
+            "final_state": "resolved",
+            "total_duration_ms": int(time.time() * 1000) - start_ts
+        })
+        
         await upload_postmortem(session)
         
     elif state == IncidentState.ESCALATED:
@@ -201,6 +281,18 @@ async def execute_full_remediation_flow(incident_id: str, alert_text: str):
             "resolution_summary": "Remediation failed or was rejected. Escalated to on-call."
         })
         append_db_log(incident_id, "Incident failed and escalated to manual operator intervention.")
+        
+        emit_event(incident_id, "state_transition", {
+            "to_state": "failed",
+            "from_state": "verify",
+            "metadata": {"summary": "Remediation failed or was rejected."}
+        })
+        
+        emit_event(incident_id, "stream_end", {
+            "final_state": "failed",
+            "total_duration_ms": int(time.time() * 1000) - start_ts
+        })
+        
         await upload_postmortem(session)
 
 async def resume_execution_after_approval(incident_id: str, approved_by: str, approved: bool):
@@ -217,7 +309,18 @@ async def resume_execution_after_approval(incident_id: str, approved_by: str, ap
             "resolution_summary": f"Remediation rejected by {approved_by}."
         })
         append_db_log(incident_id, f"Remediation plan rejected by operator: {approved_by}")
-        # Run upload postmortem representing escalation
+        
+        emit_event(incident_id, "state_transition", {
+            "to_state": "failed",
+            "from_state": "awaiting_approval",
+            "metadata": {"summary": f"Remediation rejected by operator: {approved_by}"}
+        })
+        
+        emit_event(incident_id, "stream_end", {
+            "final_state": "failed",
+            "total_duration_ms": 0
+        })
+        
         alert = {"id": incident_id, "alert_text": incident.get("raw_alert")}
         session = {"alert": alert, "diagnosis": {"service": incident.get("service")}, "plan": {"command": incident.get("remediation_plan")}}
         await upload_postmortem(session)
@@ -230,7 +333,6 @@ async def resume_execution_after_approval(incident_id: str, approved_by: str, ap
     })
     append_db_log(incident_id, f"Remediation plan approved by operator: {approved_by}. Resuming execution.")
 
-    # Continue loop starting at EXECUTE
     plan = {
         "command": incident.get("remediation_plan"),
         "id": "remediation-approved-id"
@@ -245,10 +347,23 @@ async def resume_execution_after_approval(incident_id: str, approved_by: str, ap
         "id": incident_id
     }
     
+    emit_event(incident_id, "state_transition", {
+        "to_state": "executing",
+        "from_state": "awaiting_approval",
+        "metadata": {"approved_by": approved_by, "command": plan.get("command")}
+    })
+    
     start_time = time.time()
+    start_ts = int(start_time * 1000)
     span = observability.start_span(incident_id, "executing")
     result = await execute_remediation(plan)
     session["exec_result"] = result
+    
+    emit_event(incident_id, "tool_output", {
+        "tool": "executor",
+        "output": result.get("stdout") if result.get("success") else result.get("stderr"),
+        "latency_ms": 1000
+    })
     
     if result.get("success"):
         append_db_log(incident_id, f"Remediation execution succeeded:\n{result.get('stdout')}")
@@ -256,6 +371,13 @@ async def resume_execution_after_approval(incident_id: str, approved_by: str, ap
         
         # Verify
         span_v = observability.start_span(incident_id, "verify")
+        
+        emit_event(incident_id, "state_transition", {
+            "to_state": "verify",
+            "from_state": "executing",
+            "metadata": {}
+        })
+        
         healthy = await verify_system_health(alert)
         if healthy:
             append_db_log(incident_id, "Post-remediation port diagnostics succeeded. Target health nominal.")
@@ -268,6 +390,18 @@ async def resume_execution_after_approval(incident_id: str, approved_by: str, ap
             })
             append_db_log(incident_id, f"Incident resolved successfully in {elapsed}s.")
             observability.end_span(span_v, "SUCCESS")
+            
+            emit_event(incident_id, "state_transition", {
+                "to_state": "resolved",
+                "from_state": "verify",
+                "metadata": {"summary": f"Resolved in {elapsed}s"}
+            })
+            
+            emit_event(incident_id, "stream_end", {
+                "final_state": "resolved",
+                "total_duration_ms": int(time.time() * 1000) - start_ts
+            })
+            
             await upload_postmortem(session)
         else:
             append_db_log(incident_id, "Post-remediation diagnostics failed. Service remains unhealthy.")
@@ -277,6 +411,18 @@ async def resume_execution_after_approval(incident_id: str, approved_by: str, ap
                 "resolution_summary": "Remediation failed or was rejected. Escalated to on-call."
             })
             observability.end_span(span_v, "FAILED")
+            
+            emit_event(incident_id, "state_transition", {
+                "to_state": "failed",
+                "from_state": "verify",
+                "metadata": {"summary": "Post-remediation check failed."}
+            })
+            
+            emit_event(incident_id, "stream_end", {
+                "final_state": "failed",
+                "total_duration_ms": int(time.time() * 1000) - start_ts
+            })
+            
             await upload_postmortem(session)
     else:
         append_db_log(incident_id, f"Remediation execution failed:\n{result.get('stderr')}")
@@ -286,52 +432,16 @@ async def resume_execution_after_approval(incident_id: str, approved_by: str, ap
             "status": "failed",
             "resolution_summary": "Remediation failed or was rejected. Escalated to on-call."
         })
+        
+        emit_event(incident_id, "state_transition", {
+            "to_state": "failed",
+            "from_state": "executing",
+            "metadata": {"summary": "Execution check failed."}
+        })
+        
+        emit_event(incident_id, "stream_end", {
+            "final_state": "failed",
+            "total_duration_ms": int(time.time() * 1000) - start_ts
+        })
+        
         await upload_postmortem(session)
-
-# ----------------- FC3 WSGI HANDLER -----------------
-def handler(environ, start_response):
-    """
-    Alibaba Cloud Function Compute 3.0 WSGI HTTP Trigger entry point.
-    """
-    try:
-        request_method = environ.get('REQUEST_METHOD', 'GET')
-        path_info = environ.get('PATH_INFO', '/')
-
-        # 1. Health check liveness endpoint for judges
-        if path_info == '/api/health' and request_method == 'GET':
-            status = '200 OK'
-            response_headers = [('Content-type', 'application/json')]
-            start_response(status, response_headers)
-            return [json.dumps({"status": "healthy", "service": "Qwen Autopilot Ops Serverless Runtime"}).encode('utf-8')]
-
-        # 2. Trigger webhook ingestion endpoint
-        elif path_info == '/api/webhooks/sls' and request_method == 'POST':
-            try:
-                request_body_size = int(environ.get('CONTENT_LENGTH', 0))
-                request_body = environ['wsgi.input'].read(request_body_size)
-                payload = json.loads(request_body)
-            except Exception:
-                payload = {}
-
-            incident_id = str(uuid.uuid4())[:8]
-            alert_text = payload.get("alert_message", "SLS High CPU trigger exception")
-
-            # Run state machine loop synchronously under Function Compute invocation request
-            asyncio.run(execute_full_remediation_flow(incident_id, alert_text))
-
-            status = '202 Accepted'
-            response_headers = [('Content-type', 'application/json')]
-            start_response(status, response_headers)
-            return [json.dumps({"incident_id": incident_id, "status": "processing"}).encode('utf-8')]
-
-        else:
-            status = '404 Not Found'
-            response_headers = [('Content-type', 'application/json')]
-            start_response(status, response_headers)
-            return [json.dumps({"error": "Path not found"}).encode('utf-8')]
-
-    except Exception as e:
-        status = '500 Internal Server Error'
-        response_headers = [('Content-type', 'application/json')]
-        start_response(status, response_headers)
-        return [json.dumps({"error": str(e)}).encode('utf-8')]

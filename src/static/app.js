@@ -81,6 +81,41 @@ async function triggerAlert() {
     }
 }
 
+// Active event streams map
+let activeStreams = {};
+
+function startSseStream(incidentId) {
+    if (activeStreams[incidentId]) return;
+    
+    console.log(`Starting SSE Stream for incident ${incidentId}`);
+    const source = new EventSource(`${API_BASE}/api/incidents/${incidentId}/stream`);
+    activeStreams[incidentId] = source;
+    
+    source.addEventListener("agent", (event) => {
+        try {
+            const data = JSON.parse(event.data);
+            console.log("SSE Event Received:", data);
+            
+            if (data.event === "stream_end") {
+                console.log(`SSE Stream ended for ${incidentId}`);
+                source.close();
+                delete activeStreams[incidentId];
+            }
+            
+            // Re-fetch all data to update the UI cards instantly!
+            fetchData();
+            
+        } catch (e) {
+            console.error("Failed to parse SSE event data:", e);
+        }
+    });
+    
+    source.onerror = () => {
+        source.close();
+        delete activeStreams[incidentId];
+    };
+}
+
 // Fetch Incidents
 async function fetchIncidents() {
     const res = await fetch(`${API_BASE}/api/incidents`);
@@ -89,6 +124,13 @@ async function fetchIncidents() {
     // Update active incident counts
     const activeCount = incidents.filter(i => !["resolved", "failed"].includes(i.status)).length;
     document.getElementById("active-count").innerText = activeCount;
+    
+    // Start streaming for all active incidents
+    incidents.forEach(incident => {
+        if (!["resolved", "failed"].includes(incident.status)) {
+            startSseStream(incident.id);
+        }
+    });
     
     renderIncidents();
     updateAgentStatusPanel();
