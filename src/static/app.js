@@ -331,13 +331,18 @@ function updateHITLPanel() {
     const pendingIncident = incidents.find(i => i.status === "pending_approval");
     
     if (pendingIncident) {
+        const idEl = document.getElementById("hitl-id");
+        if (idEl) idEl.innerText = pendingIncident.id;
+        
         document.getElementById("hitl-host").innerText = pendingIncident.host || "Unknown";
         document.getElementById("hitl-tool").innerText = pendingIncident.remediation_plan || "None";
         document.getElementById("hitl-plan").innerText = `Proposed remediation command requires authorized approval. Risk level: ${pendingIncident.risk_level || "0.7"}`;
         
         hitlCard.style.display = "block";
+        hitlCard.classList.add("pulse-hitl-card");
     } else {
         hitlCard.style.display = "none";
+        hitlCard.classList.remove("pulse-hitl-card");
     }
 }
 
