@@ -167,7 +167,7 @@
                     <div class="card glassmorphic flex-grow flex-col">
                         <div class="card-header">
                             <div class="header-title-group">
-                                <h2>Active Remediation Stream</h2>
+                                <h2>Active Remediation Stream <span class="badge" id="active-count" style="margin-left:0.5rem; font-size:0.65rem; background:rgba(6,182,212,0.1); color:var(--color-cyan); padding:0.1rem 0.35rem; border-radius:4px;">0</span></h2>
                                 <span class="sub-header-label">Active system incident remediation process.</span>
                             </div>
                             <div class="real-time-status">
@@ -279,6 +279,7 @@
                             <p class="hitl-desc">High-risk command requires review and operator execution authorization.</p>
                             
                             <div class="hitl-details-box">
+                                <div class="hitl-row"><span>ID:</span> <span id="hitl-id" class="monospace">--</span></div>
                                 <div class="hitl-row"><span>Node:</span> <span id="hitl-host" class="monospace">--</span></div>
                                 <div class="hitl-row"><span>Command:</span> <code id="hitl-tool" class="monospace">--</code></div>
                                 <p class="hitl-plan-preview" id="hitl-plan">--</p>
