@@ -1002,3 +1002,61 @@ body {
 .demo-details summary:hover {
     color: var(--text-primary);
 }
+
+/* Agent OKR Dropdown Styles */
+.agent-okr-details {
+    width: 100%;
+}
+
+.agent-status-tile-summary {
+    list-style: none; /* Hide default triangle icon */
+    outline: none;
+    cursor: pointer;
+}
+
+.agent-status-tile-summary::-webkit-details-marker {
+    display: none; /* Hide default triangle in Safari */
+}
+
+.agent-okr-content {
+    margin-top: 0.4rem;
+    padding: 0.5rem 0.8rem;
+    background: rgba(15, 23, 42, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    border-top: none;
+    border-radius: 0 0 6px 6px;
+    font-size: 0.65rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+/* Adjust status tile border when details are open */
+.agent-okr-details[open] .agent-status-tile {
+    border-radius: 6px 6px 0 0;
+    border-bottom: none;
+    background: rgba(30, 41, 59, 0.5);
+}
+
+.okr-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+    padding-bottom: 0.25rem;
+    margin-bottom: 0.15rem;
+}
+
+.okr-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.okr-kr {
+    color: var(--text-secondary);
+}
+
+.okr-metric {
+    font-family: var(--font-mono);
+    font-weight: 600;
+}

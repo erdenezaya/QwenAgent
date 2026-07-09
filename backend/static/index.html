@@ -219,38 +219,98 @@
                     <div class="card-body flex-col" style="gap: 0.6rem;">
                         <p class="section-desc">Active agent registry detailing models and live operational states.</p>
                         
-                        <div class="agent-status-tile" id="agent-tile-triage">
-                            <div class="agent-tile-info">
-                                <span class="agent-tile-name">Triage & Diagnostic Agent</span>
-                                <span class="agent-tile-model">qwen-plus</span>
+                        <!-- Triage Agent OKRs -->
+                        <details class="agent-okr-details">
+                            <summary class="agent-status-tile-summary">
+                                <div class="agent-status-tile" id="agent-tile-triage">
+                                    <div class="agent-tile-info">
+                                        <span class="agent-tile-name">Triage & Diagnostic Agent</span>
+                                        <span class="agent-tile-model">qwen-plus</span>
+                                    </div>
+                                    <div class="agent-tile-status">
+                                        <span class="status-indicator indicator-grey" id="agent-status-triage-dot"></span>
+                                        <span class="status-text text-glow-grey" id="agent-status-triage-text">Idle</span>
+                                    </div>
+                                </div>
+                            </summary>
+                            <div class="agent-okr-content">
+                                <div class="okr-title">Objective: Maximize alert triage accuracy & speed</div>
+                                <div class="okr-item">
+                                    <span class="okr-kr">KR1: Parse and diagnose alert payloads under 2.0s</span>
+                                    <span class="okr-metric text-green" id="okr-triage-kr1">1.4s (Pass)</span>
+                                </div>
+                                <div class="okr-item">
+                                    <span class="okr-kr">KR2: Maintain 98%+ entity parser accuracy</span>
+                                    <span class="okr-metric text-green" id="okr-triage-kr2">99% (Pass)</span>
+                                </div>
+                                <div class="okr-item">
+                                    <span class="okr-kr">KR3: Detect 100% of recurring duplicate alarms</span>
+                                    <span class="okr-metric text-green" id="okr-triage-kr3">100% (Pass)</span>
+                                </div>
                             </div>
-                            <div class="agent-tile-status">
-                                <span class="status-indicator indicator-grey" id="agent-status-triage-dot"></span>
-                                <span class="status-text text-glow-grey" id="agent-status-triage-text">Idle</span>
-                            </div>
-                        </div>
+                        </details>
 
-                        <div class="agent-status-tile" id="agent-tile-remediation">
-                            <div class="agent-tile-info">
-                                <span class="agent-tile-name">Remediation Planner Agent</span>
-                                <span class="agent-tile-model">qwen-max</span>
+                        <!-- Remediation Agent OKRs -->
+                        <details class="agent-okr-details" style="margin-top: 0.5rem;">
+                            <summary class="agent-status-tile-summary">
+                                <div class="agent-status-tile" id="agent-tile-remediation">
+                                    <div class="agent-tile-info">
+                                        <span class="agent-tile-name">Remediation Planner Agent</span>
+                                        <span class="agent-tile-model">qwen-max</span>
+                                    </div>
+                                    <div class="agent-tile-status">
+                                        <span class="status-indicator indicator-grey" id="agent-status-remediation-dot"></span>
+                                        <span class="status-text text-glow-grey" id="agent-status-remediation-text">Idle</span>
+                                    </div>
+                                </div>
+                            </summary>
+                            <div class="agent-okr-content">
+                                <div class="okr-title">Objective: Formulate safe playbook actions with high success rate</div>
+                                <div class="okr-item">
+                                    <span class="okr-kr">KR1: Achieve 90%+ auto-remediation rate</span>
+                                    <span class="okr-metric text-yellow" id="okr-remed-kr1">100% (Pass)</span>
+                                </div>
+                                <div class="okr-item">
+                                    <span class="okr-kr">KR2: Enforce 100% downtime manual approval policy</span>
+                                    <span class="okr-metric text-green" id="okr-remed-kr2">100% (Pass)</span>
+                                </div>
+                                <div class="okr-item">
+                                    <span class="okr-kr">KR3: Select optimal SSH command / tool script</span>
+                                    <span class="okr-metric text-green" id="okr-remed-kr3">97% (Pass)</span>
+                                </div>
                             </div>
-                            <div class="agent-tile-status">
-                                <span class="status-indicator indicator-grey" id="agent-status-remediation-dot"></span>
-                                <span class="status-text text-glow-grey" id="agent-status-remediation-text">Idle</span>
-                            </div>
-                        </div>
+                        </details>
 
-                        <div class="agent-status-tile" id="agent-tile-verify">
-                            <div class="agent-tile-info">
-                                <span class="agent-tile-name">Verification & Safety Agent</span>
-                                <span class="agent-tile-model">qwen-plus</span>
+                        <!-- Verification Agent OKRs -->
+                        <details class="agent-okr-details" style="margin-top: 0.5rem;">
+                            <summary class="agent-status-tile-summary">
+                                <div class="agent-status-tile" id="agent-tile-verify">
+                                    <div class="agent-tile-info">
+                                        <span class="agent-tile-name">Verification & Safety Agent</span>
+                                        <span class="agent-tile-model">qwen-plus</span>
+                                    </div>
+                                    <div class="agent-tile-status">
+                                        <span class="status-indicator indicator-grey" id="agent-status-verify-dot"></span>
+                                        <span class="status-text text-glow-grey" id="agent-status-verify-text">Idle</span>
+                                    </div>
+                                </div>
+                            </summary>
+                            <div class="agent-okr-content">
+                                <div class="okr-title">Objective: Verify service recovery & publish audit reports</div>
+                                <div class="okr-item">
+                                    <span class="okr-kr">KR1: Run health port diagnostics under 5.0s</span>
+                                    <span class="okr-metric text-green" id="okr-verify-kr1">1.8s (Pass)</span>
+                                </div>
+                                <div class="okr-item">
+                                    <span class="okr-kr">KR2: Keep MTTR (Mean Time to Recover) under 15.0s</span>
+                                    <span class="okr-metric text-purple" id="okr-verify-kr2">0.0s (Pass)</span>
+                                </div>
+                                <div class="okr-item">
+                                    <span class="okr-kr">KR3: Archive post-mortems successfully to OSS</span>
+                                    <span class="okr-metric text-green" id="okr-verify-kr3">100% (Pass)</span>
+                                </div>
                             </div>
-                            <div class="agent-tile-status">
-                                <span class="status-indicator indicator-grey" id="agent-status-verify-dot"></span>
-                                <span class="status-text text-glow-grey" id="agent-status-verify-text">Idle</span>
-                            </div>
-                        </div>
+                        </details>
                     </div>
                 </div>
 

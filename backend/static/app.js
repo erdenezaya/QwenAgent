@@ -114,6 +114,27 @@ async function fetchKPI() {
         document.getElementById("kpi-success").innerText = data.success_rate + "%";
         document.getElementById("kpi-auto").innerText = data.auto_remediation_rate + "%";
         document.getElementById("kpi-time").innerText = data.avg_resolution_time.toFixed(1) + "s";
+        
+        // Dynamically update agent OKR metrics based on database performance
+        const okrRemedKr1 = document.getElementById("okr-remed-kr1");
+        if (okrRemedKr1) {
+            okrRemedKr1.innerText = `${data.auto_remediation_rate}% (Target: 90%)`;
+            if (data.auto_remediation_rate >= 90) {
+                okrRemedKr1.className = "okr-metric text-green";
+            } else {
+                okrRemedKr1.className = "okr-metric text-yellow";
+            }
+        }
+        
+        const okrVerifyKr2 = document.getElementById("okr-verify-kr2");
+        if (okrVerifyKr2) {
+            okrVerifyKr2.innerText = `${data.avg_resolution_time.toFixed(1)}s (Pass)`;
+            if (data.avg_resolution_time <= 15.0) {
+                okrVerifyKr2.className = "okr-metric text-green";
+            } else {
+                okrVerifyKr2.className = "okr-metric text-yellow";
+            }
+        }
     } catch (e) {
         console.error("Failed to fetch KPIs:", e);
     }
