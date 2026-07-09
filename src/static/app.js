@@ -114,12 +114,22 @@ async function fetchIncidents() {
     const res = await fetch(`${API_BASE}/api/incidents`);
     incidents = await res.json();
     
-    // Start streaming for all active incidents
-    incidents.forEach(incident => {
-        if (!["resolved", "failed"].includes(incident.status)) {
-            startSseStream(incident.id);
+    // Find the latest active incident (first one in descending order)
+    const latestActive = incidents.find(i => !["resolved", "failed"].includes(i.status));
+    
+    // Close other streams that are no longer the latest active incident
+    Object.keys(activeStreams).forEach(id => {
+        if (!latestActive || latestActive.id !== id) {
+            console.log(`Closing stream for incident ${id}`);
+            activeStreams[id].close();
+            delete activeStreams[id];
         }
     });
+    
+    // Start streaming ONLY for the latest active incident
+    if (latestActive) {
+        startSseStream(latestActive.id);
+    }
     
     renderFlowchartAndLogs();
 }
