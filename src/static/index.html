@@ -180,12 +180,12 @@
                             <!-- Flowchart Node DAG layout -->
                             <div id="remediation-flowchart" class="remediation-flowchart">
                                 
-                                <!-- Node 1: Anomaly Detected -->
-                                <div class="flow-node node-anomaly" id="node-triage">
+                                <!-- Node 1: Triage -->
+                                <div class="flow-node node-triage" id="node-triage">
                                     <div class="node-border"></div>
-                                    <span class="node-icon">⚠️</span>
+                                    <span class="node-icon">📋</span>
                                     <div class="node-meta">
-                                        <span class="node-title">Anomaly Detected</span>
+                                        <span class="node-title">TRIAGE</span>
                                         <span class="node-detail" id="detail-triage">Pending Ingestion</span>
                                     </div>
                                 </div>
@@ -194,12 +194,12 @@
                                     <div class="connector-line"></div>
                                 </div>
                                 
-                                <!-- Node 2: Analyzing -->
-                                <div class="flow-node node-analyzing" id="node-diagnose">
+                                <!-- Node 2: Diagnose -->
+                                <div class="flow-node node-diagnose" id="node-diagnose">
                                     <div class="node-border"></div>
                                     <span class="node-icon">🔍</span>
                                     <div class="node-meta">
-                                        <span class="node-title">Analyzing System</span>
+                                        <span class="node-title">DIAGNOSE</span>
                                         <span class="node-detail" id="detail-diagnose">Idle</span>
                                     </div>
                                 </div>
@@ -208,12 +208,12 @@
                                     <div class="connector-line"></div>
                                 </div>
                                 
-                                <!-- Node 3: Generating Plan -->
-                                <div class="flow-node node-planning" id="node-plan">
+                                <!-- Node 3: Plan -->
+                                <div class="flow-node node-plan" id="node-plan">
                                     <div class="node-border"></div>
-                                    <span class="node-icon">📋</span>
+                                    <span class="node-icon">📜</span>
                                     <div class="node-meta">
-                                        <span class="node-title">Generating Plan</span>
+                                        <span class="node-title">PLAN</span>
                                         <span class="node-detail" id="detail-plan">Idle</span>
                                     </div>
                                 </div>
@@ -222,13 +222,13 @@
                                     <div class="connector-line"></div>
                                 </div>
                                 
-                                <!-- Node 4: Remediation Initiated -->
-                                <div class="flow-node node-executing" id="node-execute">
+                                <!-- Node 4: HITL Gate -->
+                                <div class="flow-node node-approval" id="node-approval">
                                     <div class="node-border"></div>
-                                    <span class="node-icon">⚡</span>
+                                    <span class="node-icon">👤</span>
                                     <div class="node-meta">
-                                        <span class="node-title">Remediation Initiated</span>
-                                        <span class="node-detail" id="detail-execute">Idle</span>
+                                        <span class="node-title">HITL GATE</span>
+                                        <span class="node-detail" id="detail-approval">Idle</span>
                                     </div>
                                 </div>
                                 
@@ -236,13 +236,55 @@
                                     <div class="connector-line"></div>
                                 </div>
                                 
-                                <!-- Node 5: Verification -->
-                                <div class="flow-node node-verifying" id="node-verify">
+                                <!-- Node 5: Execute -->
+                                <div class="flow-node node-execute" id="node-execute">
+                                    <div class="node-border"></div>
+                                    <span class="node-icon">⚡</span>
+                                    <div class="node-meta">
+                                        <span class="node-title">EXECUTE</span>
+                                        <span class="node-detail" id="detail-execute">Idle</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="flow-connector" id="conn-5">
+                                    <div class="connector-line"></div>
+                                </div>
+                                
+                                <!-- Node 6: Verify -->
+                                <div class="flow-node node-verify" id="node-verify">
                                     <div class="node-border"></div>
                                     <span class="node-icon">🟢</span>
                                     <div class="node-meta">
-                                        <span class="node-title">Verifying Recovery</span>
+                                        <span class="node-title">VERIFY</span>
                                         <span class="node-detail" id="detail-verify">Idle</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="flow-connector" id="conn-6">
+                                    <div class="connector-line"></div>
+                                </div>
+                                
+                                <!-- Node 7: Report -->
+                                <div class="flow-node node-resolved" id="node-resolved">
+                                    <div class="node-border"></div>
+                                    <span class="node-icon">🚀</span>
+                                    <div class="node-meta">
+                                        <span class="node-title">REPORT</span>
+                                        <span class="node-detail" id="detail-resolved">Idle</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="flow-connector" id="conn-7">
+                                    <div class="connector-line"></div>
+                                </div>
+                                
+                                <!-- Node 8: Escalated -->
+                                <div class="flow-node node-failed" id="node-failed">
+                                    <div class="node-border"></div>
+                                    <span class="node-icon">🚨</span>
+                                    <div class="node-meta">
+                                        <span class="node-title">ESCALATED</span>
+                                        <span class="node-detail" id="detail-failed">Idle</span>
                                     </div>
                                 </div>
 

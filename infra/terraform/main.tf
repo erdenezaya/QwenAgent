@@ -75,6 +75,28 @@ resource "alicloud_ots_table" "incident_state" {
   max_version   = 1
 }
 
+resource "alicloud_ots_table" "incidents_meta" {
+  instance_name = alicloud_ots_instance.state_store.name
+  table_name    = "incidents"
+  primary_key {
+    name = "id"
+    type = "STRING"
+  }
+  time_to_live  = 7776000
+  max_version   = 1
+}
+
+resource "alicloud_ots_table" "experiences_meta" {
+  instance_name = alicloud_ots_instance.state_store.name
+  table_name    = "experiences"
+  primary_key {
+    name = "id"
+    type = "INTEGER"
+  }
+  time_to_live  = 7776000
+  max_version   = 1
+}
+
 # ============================================================
 # 3. SLS + LOGTAIL - Agentless Log Collection (No SSH Parsing)
 # ============================================================

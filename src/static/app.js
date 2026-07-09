@@ -166,8 +166,8 @@ async function fetchKPI() {
 // Renders flowchart node states and console logs
 function renderFlowchartAndLogs() {
     // 1. Reset all nodes & connectors
-    const nodes = ["triage", "diagnose", "plan", "execute", "verify"];
-    const conns = ["conn-1", "conn-2", "conn-3", "conn-4"];
+    const nodes = ["triage", "diagnose", "plan", "approval", "execute", "verify", "resolved", "failed"];
+    const conns = ["conn-1", "conn-2", "conn-3", "conn-4", "conn-5", "conn-6", "conn-7"];
     
     nodes.forEach(id => {
         const el = document.getElementById(`node-${id}`);
@@ -197,24 +197,37 @@ function renderFlowchartAndLogs() {
     
     // Update Node details
     const dt = document.getElementById("detail-triage");
-    if (dt) dt.innerText = activeIncident.severity ? `Host: ${activeIncident.host}` : "Pending Ingestion";
+    if (dt) dt.innerText = activeIncident.host ? `Host: ${activeIncident.host}` : "Triage Active";
     
     const dd = document.getElementById("detail-diagnose");
     if (dd) dd.innerText = activeIncident.root_cause ? `RCA: ${activeIncident.root_cause}` : "Idle";
     
     const dp = document.getElementById("detail-plan");
-    if (dp) dp.innerText = activeIncident.remediation_plan ? `Plan: ${activeIncident.remediation_plan}` : "Idle";
+    if (dp) dp.innerText = activeIncident.remediation_plan ? `Plan: ${activeIncident.remediation_plan.substring(0, 15)}...` : "Idle";
+    
+    const da = document.getElementById("detail-approval");
+    if (da) {
+        if (status === "pending_approval") da.innerText = "Awaiting Action";
+        else if (activeIncident.approved_by) da.innerText = `By ${activeIncident.approved_by}`;
+        else da.innerText = "Idle";
+    }
     
     const de = document.getElementById("detail-execute");
-    if (de) de.innerText = activeIncident.status === "executing" ? "Running tool..." : activeIncident.approved_by ? `Approved by ${activeIncident.approved_by}` : "Idle";
+    if (de) de.innerText = status === "executing" ? "Running tool..." : (["verify", "resolved"].includes(status) ? "Completed" : "Idle");
 
     const dv = document.getElementById("detail-verify");
-    if (dv) dv.innerText = activeIncident.status === "verify" ? "Verifying ports..." : "Idle";
+    if (dv) dv.innerText = status === "verify" ? "Verifying..." : (status === "resolved" ? "Nominal State" : "Idle");
 
-    // Set Node State Classes
+    const dr = document.getElementById("detail-resolved");
+    if (dr) dr.innerText = status === "resolved" ? "Resolved" : "Idle";
+
+    const df = document.getElementById("detail-failed");
+    if (df) df.innerText = status === "failed" ? "Escalated to P1" : "Idle";
+
+    // Set Node State Classes based on 8-state topology
     if (status === "triage") {
         setNodeState("triage", "active");
-    } else if (status === "triage_completed" || status === "diagnose") {
+    } else if (status === "diagnose") {
         setNodeState("triage", "completed");
         setConnState("conn-1", "active");
         setNodeState("diagnose", "active");
@@ -224,43 +237,65 @@ function renderFlowchartAndLogs() {
         setConnState("conn-1", "active");
         setConnState("conn-2", "active");
         setNodeState("plan", "active");
-    } else if (status === "pending_approval" || status === "executing") {
+    } else if (status === "pending_approval") {
         setNodeState("triage", "completed");
         setNodeState("diagnose", "completed");
         setNodeState("plan", "completed");
         setConnState("conn-1", "active");
         setConnState("conn-2", "active");
         setConnState("conn-3", "active");
+        setNodeState("approval", "active");
+    } else if (status === "executing") {
+        setNodeState("triage", "completed");
+        setNodeState("diagnose", "completed");
+        setNodeState("plan", "completed");
+        setNodeState("approval", "completed");
+        setConnState("conn-1", "active");
+        setConnState("conn-2", "active");
+        setConnState("conn-3", "active");
+        setConnState("conn-4", "active");
         setNodeState("execute", "active");
     } else if (status === "verify") {
         setNodeState("triage", "completed");
         setNodeState("diagnose", "completed");
         setNodeState("plan", "completed");
+        setNodeState("approval", "completed");
         setNodeState("execute", "completed");
         setConnState("conn-1", "active");
         setConnState("conn-2", "active");
         setConnState("conn-3", "active");
         setConnState("conn-4", "active");
+        setConnState("conn-5", "active");
         setNodeState("verify", "active");
     } else if (status === "resolved") {
         setNodeState("triage", "completed");
         setNodeState("diagnose", "completed");
         setNodeState("plan", "completed");
+        setNodeState("approval", "completed");
         setNodeState("execute", "completed");
         setNodeState("verify", "completed");
         setConnState("conn-1", "active");
         setConnState("conn-2", "active");
         setConnState("conn-3", "active");
         setConnState("conn-4", "active");
-        
-        const dv_resolved = document.getElementById("detail-verify");
-        if (dv_resolved) dv_resolved.innerText = "Nominal Health Check";
+        setConnState("conn-5", "active");
+        setConnState("conn-6", "active");
+        setNodeState("resolved", "active");
     } else if (status === "failed") {
         setNodeState("triage", "completed");
         setNodeState("diagnose", "completed");
         setNodeState("plan", "completed");
+        setNodeState("approval", "completed");
         setNodeState("execute", "failed");
         setNodeState("verify", "failed");
+        setConnState("conn-1", "active");
+        setConnState("conn-2", "active");
+        setConnState("conn-3", "active");
+        setConnState("conn-4", "active");
+        setConnState("conn-5", "active");
+        setConnState("conn-6", "active");
+        setConnState("conn-7", "active");
+        setNodeState("failed", "active");
     }
 
     // 3. Render console output logs

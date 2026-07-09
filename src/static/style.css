@@ -533,12 +533,30 @@ body {
     font-family: var(--font-mono);
 }
 
-/* Custom Node Styles */
-.node-anomaly.active .node-border { border-color: rgba(244, 63, 94, 0.8); box-shadow: 0 0 12px rgba(244, 63, 94, 0.25); }
-.node-analyzing.active .node-border { border-color: rgba(6, 182, 212, 0.8); box-shadow: 0 0 12px rgba(6, 182, 212, 0.25); }
-.node-planning.active .node-border { border-color: rgba(139, 92, 246, 0.8); box-shadow: 0 0 12px rgba(139, 92, 246, 0.25); }
-.node-executing.active .node-border { border-color: rgba(245, 158, 11, 0.8); box-shadow: 0 0 12px rgba(245, 158, 11, 0.25); }
-.node-verifying.active .node-border { border-color: rgba(16, 185, 129, 0.8); box-shadow: 0 0 12px rgba(16, 185, 129, 0.25); }
+/* Custom Node Styles (8-Node Topology) */
+.node-triage.active .node-border { border-color: #64748b; box-shadow: 0 0 12px rgba(100, 116, 139, 0.35); }
+.node-triage.completed .node-border { border-color: #64748b; }
+
+.node-diagnose.active .node-border { border-color: var(--color-violet); box-shadow: 0 0 12px rgba(139, 92, 246, 0.35); }
+.node-diagnose.completed .node-border { border-color: var(--color-violet); }
+
+.node-plan.active .node-border { border-color: var(--color-violet); box-shadow: 0 0 12px rgba(139, 92, 246, 0.35); }
+.node-plan.completed .node-border { border-color: var(--color-violet); }
+
+.node-approval.active .node-border { border-color: var(--color-amber); box-shadow: 0 0 15px rgba(245, 158, 11, 0.5); animation: hitl-glow 1.5s infinite alternate; }
+.node-approval.completed .node-border { border-color: var(--color-amber); }
+
+.node-execute.active .node-border { border-color: var(--color-emerald); box-shadow: 0 0 12px rgba(16, 185, 129, 0.35); }
+.node-execute.completed .node-border { border-color: var(--color-emerald); }
+
+.node-verify.active .node-border { border-color: var(--color-cyan); box-shadow: 0 0 12px rgba(6, 182, 212, 0.35); }
+.node-verify.completed .node-border { border-color: var(--color-cyan); }
+
+.node-resolved.active .node-border { border-color: #10b981; box-shadow: 0 0 12px rgba(16, 185, 129, 0.35); }
+.node-resolved.completed .node-border { border-color: #10b981; }
+
+.node-failed.active .node-border { border-color: var(--color-rose); box-shadow: 0 0 15px rgba(244, 63, 94, 0.55); }
+.node-failed.completed .node-border { border-color: var(--color-rose); }
 
 /* FLOWCONNECTORS ARROWS */
 .flow-connector {

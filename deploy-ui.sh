@@ -2,6 +2,36 @@
 # deploy-ui.sh
 # Uploads cockpit static assets to OSS public site bucket
 
+echo "=== Processing Cockpit UI Content Hashes ==="
+
+# Run python script to automatically calculate content hashes and replace them in index.html
+python -c "
+import os, hashlib, re
+
+def get_hash(path):
+    h = hashlib.md5()
+    with open(path, 'rb') as f:
+        h.update(f.read())
+    return h.hexdigest()[:8]
+
+if os.path.exists('src/static/app.js') and os.path.exists('src/static/style.css') and os.path.exists('src/static/index.html'):
+    js_hash = get_hash('src/static/app.js')
+    css_hash = get_hash('src/static/style.css')
+    print(f'Computed Hashes - app.js: {js_hash}, style.css: {css_hash}')
+    
+    with open('src/static/index.html', 'r', encoding='utf-8') as f:
+        content = f.read()
+        
+    content = re.sub(r'app\.js\?v=[a-zA-Z0-9.-]*', f'app.js?v={js_hash}', content)
+    content = re.sub(r'style\.css\?v=[a-zA-Z0-9.-]*', f'style.css?v={css_hash}', content)
+    
+    with open('src/static/index.html', 'w', encoding='utf-8') as f:
+        f.write(content)
+    print('index.html updated successfully with content hashes.')
+else:
+    print('Static assets not found. Skipping hash injection.')
+"
+
 echo "=== Uploading Cockpit UI Static Assets ==="
 
 # Reads the bucket name output from terraform

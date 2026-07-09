@@ -10,7 +10,8 @@ import asyncio
 import logging
 from typing import Dict, Any
 
-from src.orchestrator import execute_full_remediation_flow
+import uuid
+from src.orchestrator import execute_full_remediation_flow, resume_execution_after_approval
 from src.memory import ots_client, get_sqlite_conn
 
 logger = logging.getLogger("autopilot-ops")
@@ -109,6 +110,8 @@ def handler(environ: Dict[str, Any], start_response):
     """
     method = environ.get("REQUEST_METHOD", "GET")
     path = environ.get("PATH_INFO", "/")
+    if path.startswith("/api"):
+        path = path[4:]
 
     # --- Health Check Endpoint (for judges & monitoring) ---
     if method == "GET" and path == "/health":
@@ -120,7 +123,51 @@ def handler(environ: Dict[str, Any], start_response):
             "sls_connected": _check_sls_connectivity(),
             "oss_connected": _check_oss_connectivity()
         }).encode("utf-8")
-        start_response("200 OK", [("Content-Type", "application/json")])
+        start_response("200 OK", [
+            ("Content-Type", "application/json"),
+            ("Access-Control-Allow-Origin", "*")
+        ])
+        return [body]
+
+    # --- GET /incidents List Endpoint ---
+    if method == "GET" and path == "/incidents":
+        from src import memory
+        sessions = memory.get_all_incidents()[:20]
+        body = json.dumps(sessions).encode("utf-8")
+        start_response("200 OK", [
+            ("Content-Type", "application/json"),
+            ("Access-Control-Allow-Origin", "*")
+        ])
+        return [body]
+
+    # --- POST /incidents/{id}/approve ---
+    if method == "POST" and path.startswith("/incidents/") and path.endswith("/approve"):
+        incident_id = path.split("/")[2]
+        try:
+            request_body_size = int(environ.get('CONTENT_LENGTH', 0))
+            request_body = environ["wsgi.input"].read(request_body_size)
+            payload = json.loads(request_body) if request_body_size > 0 else {}
+            approver = payload.get("approver", "Operator-HQ")
+        except Exception:
+            approver = "Operator-HQ"
+            
+        asyncio.run(resume_execution_after_approval(incident_id, approver, True))
+        body = json.dumps({"status": "resumed"}).encode("utf-8")
+        start_response("200 OK", [
+            ("Content-Type", "application/json"),
+            ("Access-Control-Allow-Origin", "*")
+        ])
+        return [body]
+
+    # --- POST /incidents/{id}/reject ---
+    if method == "POST" and path.startswith("/incidents/") and path.endswith("/reject"):
+        incident_id = path.split("/")[2]
+        asyncio.run(resume_execution_after_approval(incident_id, "Operator-HQ", False))
+        body = json.dumps({"status": "resumed"}).encode("utf-8")
+        start_response("200 OK", [
+            ("Content-Type", "application/json"),
+            ("Access-Control-Allow-Origin", "*")
+        ])
         return [body]
 
     # --- SSE Stream Endpoint ---
@@ -168,20 +215,20 @@ def handler(environ: Dict[str, Any], start_response):
         return event_generator()
 
     # --- Incident Ingestion Endpoint ---
-    if method == "POST" and path == "/incidents":
+    if method == "POST" and (path == "/incidents" or path == "/alerts"):
         try:
             request_body_size = int(environ.get('CONTENT_LENGTH', 0))
             request_body = environ["wsgi.input"].read(request_body_size)
             alert_payload = json.loads(request_body)
 
             # Validate minimum required fields
-            if "alert_id" not in alert_payload or "alert_text" not in alert_payload:
+            if "alert_text" not in alert_payload:
                 return _error_response(start_response, 400, 
-                    "Missing required fields: alert_id, alert_text")
+                    "Missing required field: alert_text")
 
             # Run state machine loop synchronously under Function Compute invocation request
             alert_text = alert_payload.get("alert_text", "")
-            incident_id = alert_payload.get("alert_id", "")
+            incident_id = alert_payload.get("alert_id") or alert_payload.get("incident_id") or str(uuid.uuid4())[:8]
             
             asyncio.run(execute_full_remediation_flow(incident_id, alert_text))
 
