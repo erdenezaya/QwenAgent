@@ -1,0 +1,22 @@
+{
+  "alert": {
+    "id": "90d65771",
+    "alert_text": "PROMETHEUS ALERT Fired: Connection Reset on mysql-service at host db-prod-02"
+  },
+  "logs": "",
+  "diagnosis": {
+    "service": "mysql",
+    "host": "db-prod-02"
+  },
+  "plan": {
+    "command": "systemctl restart mysql",
+    "id": "remediation-approved-id"
+  },
+  "exec_result": {
+    "success": true,
+    "stdout": "Command 'systemctl restart mysql' executed successfully.\nService status: active (running) since 2026-07-09 21:20:58",
+    "stderr": "",
+    "status": "COMPLETED"
+  },
+  "id": "90d65771"
+}
