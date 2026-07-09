@@ -1,0 +1,38 @@
+[
+  {
+    "name": "Tomcat High CPU Alert",
+    "alert": {
+      "alert_text": "PROMETHEUS ALERT Fired: High CPU Usage on tomcat-service at host web-prod-01"
+    },
+    "expected_command": "systemctl restart tomcat",
+    "should_escalate": false,
+    "high_risk": true
+  },
+  {
+    "name": "MySQL Connection Failure Alert",
+    "alert": {
+      "alert_text": "PROMETHEUS ALERT Fired: Connection Reset on mysql-service at host db-prod-02"
+    },
+    "expected_command": "systemctl restart mysql",
+    "should_escalate": false,
+    "high_risk": true
+  },
+  {
+    "name": "Nginx Temp Folder Space Exhausted Alert",
+    "alert": {
+      "alert_text": "PROMETHEUS ALERT Fired: Writing Proxy Cache Failed on nginx at host web-prod-01"
+    },
+    "expected_command": "systemctl restart nginx",
+    "should_escalate": false,
+    "high_risk": true
+  },
+  {
+    "name": "Log capacity exceeded disk space alert",
+    "alert": {
+      "alert_text": "PROMETHEUS ALERT Fired: Disk utilization exceeded threshold on disk-storage at host srv-app-09"
+    },
+    "expected_command": "find /var/log -name '*.log' -mtime +7 -delete",
+    "should_escalate": false,
+    "high_risk": false
+  }
+]

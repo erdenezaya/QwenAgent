@@ -1,0 +1,11 @@
+[
+  "df -h {path}",
+  "du -sh {path}",
+  "journalctl -u {service} --since {time} --no-pager -n {lines}",
+  "systemctl restart {service}",
+  "nginx -t",
+  "logrotate -f /etc/logrotate.d/{config}",
+  "find {path} -name '*.log' -mtime +{days} -delete",
+  "docker restart {container}",
+  "systemctl status {service}"
+]
